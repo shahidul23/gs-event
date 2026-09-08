@@ -1,5 +1,6 @@
 using System;
 using GSEvent.Data;
+using GSEvent.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
@@ -42,6 +43,13 @@ public static class ApplicationExtensions
                     Description = "Gulshan Society Event Management API"
                 });
         });
+
+        // Exception handler
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
+
+
+        
         return services;
     }
 }

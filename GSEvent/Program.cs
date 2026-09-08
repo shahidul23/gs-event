@@ -1,4 +1,5 @@
 using GSEvent.Extensions;
+using GSEvent.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,8 +27,19 @@ if (app.Environment.IsDevelopment())
         options.RoutePrefix = "swagger"; 
     });
 }
+// Global Exception Middleware
+// app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
 app.MapGet("/", () => "Api is running");
+
 app.Run();
