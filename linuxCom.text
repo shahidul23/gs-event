@@ -1,0 +1,16 @@
+1. Check ownership
+    cd /home/shahidul23/projects/gs-event
+
+    ls -la
+    ls -la GSEvent
+    ls -la GSEvent/Migrations
+
+    ls -ld GSEvent
+    ls -ld GSEvent/Migrations
+
+2. Fix ownership
+    Since your Linux username is shahidul23, run:
+        sudo chown -R shahidul23:shahidul23 /home/shahidul23/projects/gs-event
+    Then give the owner write permission:
+        chmod -R u+rwX /home/shahidul23/projects/gs-event
+    
