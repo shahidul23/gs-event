@@ -6,10 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplicationService(
     builder.Configuration
 );
-
 builder.Services.AddExternalServices(
     builder.Configuration
 );
+builder.Services.AddApiValidation();
 
 var app = builder.Build();
 

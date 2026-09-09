@@ -26,3 +26,7 @@ dotnet ef database update
 dotnet ef migrations list
 
 dotnet ef migrations script InitialCreate
+
+// Validation 
+dotnet add package FluentValidation
+dotnet add package FluentValidation.DependencyInjectionExtensions
