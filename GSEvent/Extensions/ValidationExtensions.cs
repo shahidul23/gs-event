@@ -1,6 +1,7 @@
 using System;
 using FluentValidation;
 using GSEvent.Common;
+using GSEvent.Validators.Auth;
 using GSEvent.Validators.Category;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,10 +34,12 @@ public static class ValidationExtensions
                         errors
                     )
                 );
-                
             };
         });
+        // Authentication
+        services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
         services.AddValidatorsFromAssemblyContaining<CreateCategoryValidation>();
+
         return services;
     }
 }

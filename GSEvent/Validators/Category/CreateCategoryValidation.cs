@@ -14,12 +14,12 @@ public class CreateCategoryValidation : AbstractValidator<CategoryCreateDto>
             .MaximumLength(100)
             .WithMessage("Name cannot exceed 100 characters.")
             .MinimumLength(2)
-            .WithMessage("Name atlist 2 characters");
+            .WithMessage("Name must be at least 2 characters.");
         RuleFor(x => x.Description)
             .NotEmpty()
             .WithMessage("Description is required.")
             .MinimumLength(2)
-            .WithMessage("Name atlist 2 characters");
+            .WithMessage("Name must be at least 2 characters.");
     }
 
 }
