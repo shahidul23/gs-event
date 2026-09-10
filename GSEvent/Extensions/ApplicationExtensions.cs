@@ -1,6 +1,10 @@
 using System;
 using GSEvent.Data;
 using GSEvent.Exceptions;
+using GSEvent.Repositories;
+using GSEvent.Repositories.Interfaces;
+using GSEvent.Services;
+using GSEvent.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
@@ -24,6 +28,13 @@ public static class ApplicationExtensions
             }
             options.UseNpgsql(connectionString);
         });
+
+        // Repositore 
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+
+        //Service 
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         // Controllers
         services.AddControllers();
         // AutoMapper
