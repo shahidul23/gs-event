@@ -30,7 +30,9 @@ public static class ServiceExtensions
             ValidateIssuer = true,
             ValidIssuer = jwtIssuer,
             ValidateAudience = true,
-            ValidAudience = jwtAudience
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
         services.AddSingleton(tokenValidationParameter);
         services.AddIdentity<ApplicationUser, IdentityRole>()

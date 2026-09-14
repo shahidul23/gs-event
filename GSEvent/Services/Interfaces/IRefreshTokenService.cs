@@ -8,7 +8,7 @@ public interface IRefreshTokenService
     Task<RefreshToken> CreateAsync(
         ApplicationUser user,
         string jwtId,
-        string existingRefreshToken
+        string? existingRefreshToken
     );
     Task<RefreshToken?> GetByTokenAsync(
         string token

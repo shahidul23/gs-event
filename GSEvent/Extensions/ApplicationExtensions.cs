@@ -31,10 +31,13 @@ public static class ApplicationExtensions
 
         // Repositore 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        
 
 
         //Service 
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IAuthService, AuthService>();
         // Controllers
         services.AddControllers();
         // AutoMapper

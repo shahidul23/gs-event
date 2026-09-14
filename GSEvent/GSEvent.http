@@ -1,6 +1,16 @@
-@GSEvent_HostAddress = http://localhost:5071
+@base_url = http://localhost:5071
 
-GET {{GSEvent_HostAddress}}/weatherforecast/
 Accept: application/json
 
-###
+### user Register
+POST {{base_url}}/api/register
+Content-Type: application/json
+
+{
+    "userName": "shahidul",
+    "email": "shahidul@example.com",
+    "phone": "01712345678",
+    "address": "Dhaka, Bangladesh",
+    "password": "Password@123",
+    "confirmPassword": "Password@123"
+}
