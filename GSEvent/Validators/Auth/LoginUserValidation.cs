@@ -8,9 +8,9 @@ public class LoginUserValidation : AbstractValidator<LoginDto>
 {
     public LoginUserValidation()
     {
-        RuleFor(x => x.UsernameOrEmail)
+        RuleFor(x => x.UsernameOrEmailOrPhone)
             .NotEmpty()
-            .WithMessage("Username and Email is required");
+            .WithMessage("Username and Email and Phone is required");
         RuleFor(x => x.Password)
             .NotEmpty()
             .WithMessage("Password is required");

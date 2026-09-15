@@ -4,6 +4,7 @@ using GSEvent.DTOs.Auth;
 using GSEvent.Models;
 using GSEvent.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace GSEvent.Repositories;
 
@@ -23,11 +24,22 @@ public class UserRepository : IUserRepository
         _roleManager = roleManager;
     }
 
+    public async Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
+    {
+        return await _userManager.CheckPasswordAsync(user, password);
+    }
+
     public async Task<ApplicationUser?> CreateAsync(ApplicationUser user, string password)
     {
         var result = await _userManager.CreateAsync(user, password);
         if (!result.Succeeded)
         {
+            var errors = string.Join(
+                ", ",
+                result.Errors.Select(x => x.Description)
+            );
+
+            Console.WriteLine($"User creation failed: {errors}");
             return null;
         }
         return user;
@@ -36,6 +48,11 @@ public class UserRepository : IUserRepository
     public async Task<bool> ExistsByEmailAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email) is not null;
+    }
+
+    public async Task<bool> ExistsByPhoneAsync(string phone)
+    {
+        return await _userManager.Users.AnyAsync(x => x.PhoneNumber == phone);
     }
 
     public async Task<bool> ExistsByUsernameAsync(string username)
@@ -51,6 +68,12 @@ public class UserRepository : IUserRepository
     public async Task<ApplicationUser?> GetByIdAsync(string userId)
     {
         return await _userManager.FindByIdAsync(userId);
+    }
+
+    public async Task<ApplicationUser?> GetByPhoneAsync(string phone)
+    {
+        return await _userManager.Users
+            .FirstOrDefaultAsync(x => x.PhoneNumber == phone);
     }
 
     public async Task<ApplicationUser?> GetByUsernameAsync(string username)

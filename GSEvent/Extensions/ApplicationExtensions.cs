@@ -38,10 +38,10 @@ public static class ApplicationExtensions
         //Service 
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IJwtService, JwtService>();
         // Controllers
         services.AddControllers();
         // AutoMapper
-        services.AddAutoMapper(map => {}, typeof(Program).Assembly);
 
         // Swagger
         services.AddOpenApi();

@@ -1,62 +1,253 @@
 using System;
-using AutoMapper;
+using System.IdentityModel.Tokens.Jwt;
 using GSEvent.DTOs.Auth;
+using GSEvent.Exceptions;
 using GSEvent.Models;
 using GSEvent.Repositories.Interfaces;
 using GSEvent.Services.Interfaces;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GSEvent.Services;
 
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IJwtService _jwtService;
     private readonly IRefreshTokenService _refreshTokenService;
-    private readonly IMapper _mapper;
+    private readonly TokenValidationParameters _tokenValidationParameters;
     public AuthService(
         IUserRepository userRepository,
+        IRefreshTokenRepository refreshTokenRepository,
         IJwtService jwtService,
         IRefreshTokenService refreshTokenService,
-        IMapper mapper
+        TokenValidationParameters tokenValidationParameters
     )
     {
         _userRepository = userRepository;
         _jwtService = jwtService;
         _refreshTokenService = refreshTokenService;
-        _mapper = mapper;
+        _tokenValidationParameters = tokenValidationParameters;
+        _refreshTokenRepository = refreshTokenRepository;
     }
-    public Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
+    public async Task<AuthResponseDto?> LoginAsync(LoginDto login)
     {
-        throw new NotImplementedException();
+        ApplicationUser? existingUser;
+        if (login.UsernameOrEmailOrPhone.Contains("@"))
+        {
+            existingUser = await _userRepository
+                .GetByEmailAsync(login.UsernameOrEmailOrPhone);
+        }
+        else if (login.UsernameOrEmailOrPhone.All(char.IsDigit))
+        {
+            existingUser = await _userRepository
+                .GetByPhoneAsync(login.UsernameOrEmailOrPhone);
+        }
+        else
+        {
+            existingUser = await _userRepository
+                .GetByUsernameAsync(login.UsernameOrEmailOrPhone);
+        }
+
+        if (existingUser == null)
+        {
+            throw new BadRequestException(
+                "Invalid username, email, or phone number."
+            );
+        }
+        var passwordValide = await _userRepository.CheckPasswordAsync(existingUser, login.Password);
+        if (!passwordValide)
+        {
+            throw new BadRequestException("Invalid username, email, or phone number.");
+        }
+
+        var jwtResult = _jwtService.GenerateJwtTokenAsync(existingUser);
+        var refreshToken = await _refreshTokenService.CreateAsync(existingUser, jwtResult.JwtId, "");
+
+        return new AuthResponseDto
+        {
+            Token = jwtResult.Token,
+            RefreshToken = refreshToken.Token,
+            ExpiresAt = jwtResult.ExpiresAt,
+            User = new UserReadDto
+            {
+                Id = existingUser.Id,
+                FullName = existingUser.FullName,
+                UserName = existingUser.UserName ?? string.Empty,
+                Email = existingUser.Email ?? string.Empty
+            }
+        };
     }
 
-    public async Task<AuthResponseDto?> RegisterAsync(RegisterDto register)
+    public async Task<UserReadDto?> RegisterAsync(RegisterDto register)
     {
         var existingUser = await _userRepository.ExistsByEmailAsync(register.Email);
-        if (!existingUser)
+        if (existingUser)
         {
-            return null;
+            throw new ConflictException($"{register.Email} Mail Already Exist");
         }
         var existingUsername = await _userRepository
             .ExistsByUsernameAsync(register.UserName);
 
         if (existingUsername)
         {
-            return null;
+            throw new ConflictException($"{register.UserName} Username Already Exist");
         }
-        var newUser = _mapper.Map<ApplicationUser>(register); 
+        var existingByPhone = await _userRepository.ExistsByPhoneAsync(register.Phone);
+        if (existingByPhone)
+        {
+            throw new ConflictException($"{register.Phone} Phone Already Exist");
+        }
+
+        var newUser = new ApplicationUser()
+        {
+            FullName = register.FullName,
+            UserName = register.UserName,
+            Email = register.Email,
+            PhoneNumber = register.Phone,
+            Address = register.Address,
+            SecurityStamp = Guid.NewGuid().ToString()
+        };
+        Console.WriteLine(newUser.UserName);
 
         var createUser = await _userRepository.CreateAsync(newUser, register.Password);
 
-        var UserDto = _mapper.Map<UserReadDto>(createUser);
-
-
-        return new AuthResponseDto
+        if (createUser is null)
         {
-            Token = "",
-            RefreshToken = "",
-            ExpiresAt = DateTime.UtcNow,
-            User = UserDto
+            return null;
+        }
+
+        return new UserReadDto
+        {
+            Id = createUser.Id,
+            FullName = createUser.FullName,
+            UserName = createUser.UserName ?? string.Empty,
+            Email = createUser.Email ?? string.Empty
         };
+    }
+
+    public async Task<AuthResponseDto?> VerifyAndGenerateTokenAsync(TokenResetDto tokenReset)
+    {
+        var jwtTokenHandler = new JwtSecurityTokenHandler();
+        try
+        {
+            var tokenInVerification = jwtTokenHandler.ValidateToken(
+                tokenReset.Token,
+                _tokenValidationParameters,
+                out var validatedToken
+            );
+            if (validatedToken is not JwtSecurityToken jwtSecurityToken)
+            {
+                throw new BadRequestException("Invalid token format.");
+            }
+            var IsValidAlgorithm = jwtSecurityToken.Header.Alg.Equals(
+                SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase
+            );
+            if (!IsValidAlgorithm)
+            {
+                throw new BadRequestException( "Invalid token algorithm." );
+            }
+            var expiryClaim = tokenInVerification.Claims
+                .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp);
+            if (expiryClaim == null)
+            {
+                throw new BadRequestException( "Token expiration claim is missing." );
+            }
+            if(!long.TryParse(expiryClaim.Value, out var utcExpireyDate))
+            {
+                throw new BadRequestException( "Invalid token expiration value." );
+            }
+            var expiryDate = UnixTimeStampToDateTimeInUTC(utcExpireyDate);
+            if(expiryDate > DateTime.UtcNow)
+            {
+                throw new BadRequestException ("Token has not expired yet");
+            }
+            var jtiClaim = tokenInVerification.Claims
+                .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti);
+            if(jtiClaim == null)
+            {
+                throw new BadRequestException("Token JTI is missing");
+            }
+            var jti = jtiClaim.Value;
+            var getRefreshToken = await _refreshTokenRepository.GetByTokenAsync(tokenReset.RefreshToken);
+            if (getRefreshToken == null)
+            {
+                throw new BadRequestException(
+                    "Refresh token does not exist in our database"
+                );
+            }
+            if (getRefreshToken.JwtId != jti)
+            {
+                throw new BadRequestException("Refresh token does not match the JWT");
+            }
+            if (getRefreshToken.ExpiredAt <= DateTime.UtcNow)
+            {
+                throw new BadRequestException(
+                    "Your refresh token has expired. Please authenticate again."
+                );
+            }
+            if (getRefreshToken.IsRevoked)
+            {
+                throw new BadRequestException("Refresh token has been revoked");
+            }
+            var getUser = await _userRepository.GetByIdAsync(getRefreshToken.UserId);
+            if (getUser == null)
+            {
+                throw new BadRequestException("User associated with token was not found");
+            }
+            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser);
+            
+            return new AuthResponseDto
+            {
+                Token = jwtResult.Token,
+                RefreshToken = getRefreshToken.Token,
+                ExpiresAt = jwtResult.ExpiresAt,
+                User = new UserReadDto
+                {
+                    Id = getUser.Id,
+                    FullName = getUser.FullName,
+                    UserName = getUser.UserName ?? string.Empty,
+                    Email = getUser.Email ?? string.Empty
+                },
+            };
+        }
+        catch (SecurityTokenException)
+        {
+            var getRefreshToken = await _refreshTokenRepository.GetByTokenAsync(tokenReset.RefreshToken);
+            if (getRefreshToken == null)
+            {
+                throw new BadRequestException(
+                    "Refresh token does not exist in your database"
+                );
+            }
+            var getUser = await _userRepository.GetByIdAsync(getRefreshToken.UserId);
+            if (getUser == null)
+            {
+                throw new BadRequestException("User associated with token was not found");
+            }
+            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser);
+            
+            return new AuthResponseDto
+            {
+                Token = jwtResult.Token,
+                RefreshToken = getRefreshToken.Token,
+                ExpiresAt = jwtResult.ExpiresAt,
+                User = new UserReadDto
+                {
+                    Id = getUser.Id,
+                    FullName = getUser.FullName,
+                    UserName = getUser.UserName ?? string.Empty,
+                    Email = getUser.Email ?? string.Empty
+                },
+            };
+        }
+    }
+
+    private DateTime UnixTimeStampToDateTimeInUTC(long utcExpireyDate)
+    {
+        var dateTimeVal = new DateTime(1970,1,1,0,0,0,0, DateTimeKind.Utc);
+        dateTimeVal = dateTimeVal.AddSeconds(utcExpireyDate);
+        return dateTimeVal;
     }
 }

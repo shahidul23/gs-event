@@ -9,6 +9,14 @@ public class RegisterUserValidator : AbstractValidator<RegisterDto>
 {
     public RegisterUserValidator()
     {
+        RuleFor(x => x.FullName)
+            .NotEmpty()
+            .WithMessage("Name is required.")
+            .MaximumLength(100)
+            .WithMessage("Name cannot exceed 100 characters.")
+            .MinimumLength(2)
+            .WithMessage("Name atlest 2 characters.");
+
         RuleFor(x => x.UserName)
             .NotEmpty()
             .WithMessage("Username is required.")

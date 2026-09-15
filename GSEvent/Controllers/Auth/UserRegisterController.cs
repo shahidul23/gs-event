@@ -21,13 +21,60 @@ namespace GSEvent.Controllers.Auth
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var user = await _authService.RegisterAsync(dto);
+            Console.WriteLine(user);
             if(user == null)
             {
                 return BadRequest(
                     ApiResponse<object>.ErrorResponse("Registration failed.", StatusCodes.Status400BadRequest, new[] { "User could not be created." })
                 );
             }
-            return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(user, "User Register Successfull", StatusCodes.Status201Created));
+            return StatusCode(
+                StatusCodes.Status201Created,
+                ApiResponse<UserReadDto>.SuccessResponse(
+                    user,
+                    "User registered successfully.",
+                    StatusCodes.Status201Created
+                )
+            );
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            var user = await _authService.LoginAsync(dto);
+            if (user == null)
+            {
+                return Unauthorized(
+                    ApiResponse<object>.ErrorResponse("Login Failed", StatusCodes.Status401Unauthorized, new [] {"Invalid username/email or password." })
+                );
+            }
+            return Ok(
+                ApiResponse<AuthResponseDto>.SuccessResponse(user, "Login Successfull", StatusCodes.Status200OK)
+            );
+        }
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult>RefreshToken([FromBody] TokenResetDto token)
+        {
+            var responce = await _authService.VerifyAndGenerateTokenAsync(token);
+            if (responce == null)
+            {
+                return BadRequest(
+                    ApiResponse<object>.ErrorResponse(
+                        "Token refresh failed.",
+                        StatusCodes.Status400BadRequest,
+                        new[] 
+                        {
+                            "Invalid or expired refresh token."
+                        }
+                    )
+                );
+            }
+            return Ok(
+                ApiResponse<AuthResponseDto>.SuccessResponse(
+                    responce,
+                    "Token refreshed successfully.",
+                    StatusCodes.Status200OK
+                )
+            );
         }
     }
 }
