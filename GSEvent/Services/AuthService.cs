@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using GSEvent.DTOs.Auth;
+using GSEvent.Enums;
 using GSEvent.Exceptions;
 using GSEvent.Models;
 using GSEvent.Repositories.Interfaces;
@@ -16,12 +17,14 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly TokenValidationParameters _tokenValidationParameters;
+    private readonly IRoleRepository _roleRepository;
     public AuthService(
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IJwtService jwtService,
         IRefreshTokenService refreshTokenService,
-        TokenValidationParameters tokenValidationParameters
+        TokenValidationParameters tokenValidationParameters,
+        IRoleRepository roleRepository
     )
     {
         _userRepository = userRepository;
@@ -29,6 +32,7 @@ public class AuthService : IAuthService
         _refreshTokenService = refreshTokenService;
         _tokenValidationParameters = tokenValidationParameters;
         _refreshTokenRepository = refreshTokenRepository;
+        _roleRepository = roleRepository;
     }
     public async Task<AuthResponseDto?> LoginAsync(LoginDto login)
     {
@@ -60,8 +64,9 @@ public class AuthService : IAuthService
         {
             throw new BadRequestException("Invalid username, email, or phone number.");
         }
+        var role = await _userRepository.GetRoleAsync(existingUser);
 
-        var jwtResult = _jwtService.GenerateJwtTokenAsync(existingUser);
+        var jwtResult = _jwtService.GenerateJwtTokenAsync(existingUser, role);
         var refreshToken = await _refreshTokenService.CreateAsync(existingUser, jwtResult.JwtId, "");
 
         return new AuthResponseDto
@@ -77,6 +82,15 @@ public class AuthService : IAuthService
                 Email = existingUser.Email ?? string.Empty
             }
         };
+    }
+
+    public async Task<bool> LogoutAsync(LogoutDto logout)
+    {
+        if (string.IsNullOrWhiteSpace(logout.RefreshToken))
+        {
+            return false;
+        }
+        return await _refreshTokenRepository.RevokeAsync(logout.RefreshToken);
     }
 
     public async Task<UserReadDto?> RegisterAsync(RegisterDto register)
@@ -116,7 +130,13 @@ public class AuthService : IAuthService
         {
             return null;
         }
-
+        var role = register.Role.ToString();
+        var roleExist = await _roleRepository.RoleExistsAsync(role);
+        if (!roleExist)
+        {
+            throw new NotFoundException("This Role Not Found");
+        }
+        await _userRepository.AddRoleAsync(createUser, role);
         return new UserReadDto
         {
             Id = createUser.Id,
@@ -196,12 +216,17 @@ public class AuthService : IAuthService
             {
                 throw new BadRequestException("User associated with token was not found");
             }
-            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser);
-            
+            var role = await _userRepository.GetRoleAsync(getUser);
+            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser, role);
+            var newRefreshToken = await _refreshTokenService.CreateAsync(
+                getUser,
+                jwtResult.JwtId,
+                tokenReset.RefreshToken
+            );
             return new AuthResponseDto
             {
                 Token = jwtResult.Token,
-                RefreshToken = getRefreshToken.Token,
+                RefreshToken = newRefreshToken.Token,
                 ExpiresAt = jwtResult.ExpiresAt,
                 User = new UserReadDto
                 {
@@ -226,12 +251,17 @@ public class AuthService : IAuthService
             {
                 throw new BadRequestException("User associated with token was not found");
             }
-            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser);
-            
+            var role = await _userRepository.GetRoleAsync(getUser);
+            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser, role);
+            var newRefreshToken = await _refreshTokenService.CreateAsync(
+                getUser,
+                jwtResult.JwtId,
+                tokenReset.RefreshToken
+            );
             return new AuthResponseDto
             {
                 Token = jwtResult.Token,
-                RefreshToken = getRefreshToken.Token,
+                RefreshToken = newRefreshToken.Token,
                 ExpiresAt = jwtResult.ExpiresAt,
                 User = new UserReadDto
                 {

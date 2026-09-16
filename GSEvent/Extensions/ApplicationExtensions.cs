@@ -32,6 +32,7 @@ public static class ApplicationExtensions
         // Repositore 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
         
 
 

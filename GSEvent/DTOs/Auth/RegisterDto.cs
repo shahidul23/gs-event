@@ -1,4 +1,5 @@
 using System;
+using GSEvent.Enums;
 
 namespace GSEvent.DTOs.Auth;
 
@@ -11,5 +12,5 @@ public class RegisterDto
     public string Address {get; set;} = string.Empty;
     public string Password {get; set;} =string.Empty;
     public string ConfirmPassword {get; set;} = string.Empty;
-    public string Role {get; set;} = string.Empty;
+    public Role Role {get; set;} = Role.User;
 }

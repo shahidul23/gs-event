@@ -27,6 +27,23 @@ public class RefreshTokenRepository : IRefreshTokenRepository
             .FirstOrDefaultAsync(x => x.Token == token);
     }
 
+    public async Task<bool> RevokeAsync(string token)
+    {
+        var refreshToken = await _appDbContext.RefreshTokens
+            .FirstOrDefaultAsync(x => x.Token == token);
+        if (refreshToken == null)
+        {
+            return false;
+        }
+        if (refreshToken.IsRevoked)
+        {
+            return false;
+        }
+        refreshToken.IsRevoked = true;
+        await _appDbContext.SaveChangesAsync();
+        return true;
+    }
+
     public async Task UpdateAsync(RefreshToken refreshToken)
     {
         _appDbContext.RefreshTokens.Update(refreshToken);

@@ -10,6 +10,8 @@ public interface IUserRepository
     Task<ApplicationUser?> GetByUsernameAsync(string username);
     Task<ApplicationUser?> GetByPhoneAsync(string phone);
     Task<ApplicationUser?> GetByIdAsync(string userId);
+    Task<ApplicationUser> AddRoleAsync(ApplicationUser user, string role);
+    Task<IList<string>> GetRoleAsync(ApplicationUser user);
     Task<bool> ExistsByEmailAsync(string email);
     Task<bool> ExistsByUsernameAsync(string username);
     Task<bool> CheckPasswordAsync(ApplicationUser user, string password);

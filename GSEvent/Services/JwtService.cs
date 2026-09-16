@@ -17,7 +17,7 @@ public class JwtService : IJwtService
     {
         _configuration = configuration;
     }
-    public JwtTokenResult GenerateJwtTokenAsync(ApplicationUser user)
+    public JwtTokenResult GenerateJwtTokenAsync(ApplicationUser user, IList<string> roles)
     {
         var jwtKey = _configuration["Jwt:Secret"]
             ?? throw new UnauthorizedException("JWT Key is not configured.");
@@ -57,6 +57,15 @@ public class JwtService : IJwtService
                 user.Email ?? string.Empty
             ),
         };
+        foreach(var role in roles)
+        {
+            authClaims.Add(
+                new Claim(
+                    ClaimTypes.Role,
+                    role
+                )
+            );
+        }
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
         var credentials = new SigningCredentials(

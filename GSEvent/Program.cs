@@ -1,3 +1,4 @@
+using GSEvent.Data;
 using GSEvent.Extensions;
 using GSEvent.Middleware;
 
@@ -12,7 +13,7 @@ builder.Services.AddExternalServices(
 builder.Services.AddApiValidation();
 
 var app = builder.Build();
-
+await AppDbInitializer.SeedRole(app);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

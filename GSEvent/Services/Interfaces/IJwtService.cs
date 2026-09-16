@@ -6,5 +6,5 @@ namespace GSEvent.Services.Interfaces;
 
 public interface IJwtService
 {
-    JwtTokenResult GenerateJwtTokenAsync(ApplicationUser user);
+    JwtTokenResult GenerateJwtTokenAsync(ApplicationUser user, IList<string> roles);
 }

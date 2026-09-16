@@ -1,7 +1,6 @@
 using GSEvent.Common;
 using GSEvent.DTOs.Auth;
 using GSEvent.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GSEvent.Controllers.Auth
@@ -72,6 +71,29 @@ namespace GSEvent.Controllers.Auth
                 ApiResponse<AuthResponseDto>.SuccessResponse(
                     responce,
                     "Token refreshed successfully.",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromBody] LogoutDto logout)
+        {
+            var result = await _authService.LogoutAsync(logout);
+            if (!result)
+            {
+                return BadRequest(
+                    ApiResponse<object>.ErrorResponse(
+                        "Invalid or already revoked refresh token",
+                        StatusCodes.Status400BadRequest,
+                        new[]
+                        {"Logout Failed"}
+                    )
+                );
+            }
+            return Ok(
+                ApiResponse<object>.SuccessResponse(
+                    null,
+                    "Logout successful",
                     StatusCodes.Status200OK
                 )
             );
