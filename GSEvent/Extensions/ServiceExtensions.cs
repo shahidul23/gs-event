@@ -1,8 +1,15 @@
 using System;
 using System.Text;
 using GSEvent.Data;
+using GSEvent.Email;
+using GSEvent.Email.Service;
+using GSEvent.Email.Service.Interface;
 using GSEvent.Exceptions;
+using GSEvent.Messaging.RabbitMQ;
 using GSEvent.Models;
+using GSEvent.RabbitMQ;
+using GSEvent.RabbitMQ.Service;
+using GSEvent.RabbitMQ.Service.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -52,6 +59,15 @@ public static class ServiceExtensions
             option.RequireHttpsMetadata = false;
         });
         services.AddAuthorization();
+        services.Configure<RabbitMqSettings>(
+            configuration.GetSection("RabbitMq")
+        );
+        services.Configure<SmtpSettings>(
+            configuration.GetSection("Smtp")
+        );
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+        services.AddHostedService<EmailVerificationConsumer>();
         return services;
     }
 }

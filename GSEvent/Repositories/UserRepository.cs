@@ -91,4 +91,9 @@ public class UserRepository : IUserRepository
     {
         return await _userManager.GetRolesAsync(user);
     }
+
+    public async Task<string> UserConfirmationAsync(ApplicationUser user)
+    {
+        return await _userManager.GenerateEmailConfirmationTokenAsync(user);
+    }
 }

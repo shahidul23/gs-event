@@ -1,0 +1,11 @@
+using System;
+
+namespace GSEvent.Messaging;
+
+public class EmailVerificationMessage
+{
+    public string Email { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string VerificationToken { get; set; } = string.Empty;
+    public string VerificationUrl { get; set; } = string.Empty;
+}

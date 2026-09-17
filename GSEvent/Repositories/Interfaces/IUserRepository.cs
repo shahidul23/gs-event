@@ -16,5 +16,6 @@ public interface IUserRepository
     Task<bool> ExistsByUsernameAsync(string username);
     Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
     Task<bool> ExistsByPhoneAsync(string phone);
+    Task <string> UserConfirmationAsync(ApplicationUser user);
 
 }

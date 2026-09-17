@@ -21,6 +21,21 @@ public class RefreshTokenService : IRefreshTokenService
     }
     public async Task<RefreshToken> CreateAsync(ApplicationUser user, string jwtId, string? existingRefreshToken)
     {
+        if (!string.IsNullOrWhiteSpace(existingRefreshToken))
+        {
+            var oldToken = await _refreshTokenRepository
+                .GetByTokenAsync(existingRefreshToken);
+            if (oldToken is not null)
+            {
+                if(!oldToken.IsRevoked && oldToken.ExpiredAt > DateTime.UtcNow)
+                {
+                    return oldToken;
+                }
+                oldToken.IsRevoked = true;
+                await _refreshTokenRepository.UpdateAsync(oldToken);
+            }
+        }
+
         var refreshToken = new RefreshToken
         {
             UserId = user.Id,
@@ -32,16 +47,6 @@ public class RefreshTokenService : IRefreshTokenService
                 GetRefreshTokenExpirationDays()
             )
         };
-        if (!string.IsNullOrWhiteSpace(existingRefreshToken))
-        {
-            var oldToken = await _refreshTokenRepository
-                .GetByTokenAsync(existingRefreshToken);
-            if (oldToken is not null)
-            {
-                oldToken.IsRevoked = true;
-                await _refreshTokenRepository.UpdateAsync(oldToken);
-            }
-        }
         await _refreshTokenRepository.CreateAsync(refreshToken);
         return refreshToken;
     }

@@ -1,11 +1,15 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using GSEvent.DTOs.Auth;
 using GSEvent.Enums;
 using GSEvent.Exceptions;
+using GSEvent.Messaging;
 using GSEvent.Models;
+using GSEvent.RabbitMQ.Service.Interface;
 using GSEvent.Repositories.Interfaces;
 using GSEvent.Services.Interfaces;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GSEvent.Services;
@@ -18,13 +22,15 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly TokenValidationParameters _tokenValidationParameters;
     private readonly IRoleRepository _roleRepository;
+    private readonly IRabbitMqPublisher _rabbitMqPublisher;
     public AuthService(
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IJwtService jwtService,
         IRefreshTokenService refreshTokenService,
         TokenValidationParameters tokenValidationParameters,
-        IRoleRepository roleRepository
+        IRoleRepository roleRepository,
+        IRabbitMqPublisher rabbitMqPublisher
     )
     {
         _userRepository = userRepository;
@@ -33,6 +39,7 @@ public class AuthService : IAuthService
         _tokenValidationParameters = tokenValidationParameters;
         _refreshTokenRepository = refreshTokenRepository;
         _roleRepository = roleRepository;
+        _rabbitMqPublisher = rabbitMqPublisher;
     }
     public async Task<AuthResponseDto?> LoginAsync(LoginDto login)
     {
@@ -137,6 +144,20 @@ public class AuthService : IAuthService
             throw new NotFoundException("This Role Not Found");
         }
         await _userRepository.AddRoleAsync(createUser, role);
+        var token = await _userRepository.UserConfirmationAsync(createUser);
+        var encodedToken = WebEncoders.Base64UrlEncode(
+            Encoding.UTF8.GetBytes(token)
+        );
+        var message = new EmailVerificationMessage
+        {
+            UserName = newUser.UserName,
+            Email = newUser.Email,
+            VerificationToken = encodedToken
+        };
+        await _rabbitMqPublisher.PublishAsync(
+            RabbitMqQueue.EmailVerification,
+            message
+        );
         return new UserReadDto
         {
             Id = createUser.Id,
@@ -146,132 +167,107 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<AuthResponseDto?> VerifyAndGenerateTokenAsync(TokenResetDto tokenReset)
+    public async Task<AuthResponseDto?> VerifyAndGenerateTokenAsync(
+    TokenResetDto tokenReset)
     {
         var jwtTokenHandler = new JwtSecurityTokenHandler();
+        JwtSecurityToken jwtToken;
+
         try
         {
-            var tokenInVerification = jwtTokenHandler.ValidateToken(
+            jwtTokenHandler.ValidateToken(
                 tokenReset.Token,
                 _tokenValidationParameters,
                 out var validatedToken
             );
-            if (validatedToken is not JwtSecurityToken jwtSecurityToken)
-            {
-                throw new BadRequestException("Invalid token format.");
-            }
-            var IsValidAlgorithm = jwtSecurityToken.Header.Alg.Equals(
-                SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase
-            );
-            if (!IsValidAlgorithm)
-            {
-                throw new BadRequestException( "Invalid token algorithm." );
-            }
-            var expiryClaim = tokenInVerification.Claims
-                .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp);
-            if (expiryClaim == null)
-            {
-                throw new BadRequestException( "Token expiration claim is missing." );
-            }
-            if(!long.TryParse(expiryClaim.Value, out var utcExpireyDate))
-            {
-                throw new BadRequestException( "Invalid token expiration value." );
-            }
-            var expiryDate = UnixTimeStampToDateTimeInUTC(utcExpireyDate);
-            if(expiryDate > DateTime.UtcNow)
-            {
-                throw new BadRequestException ("Token has not expired yet");
-            }
-            var jtiClaim = tokenInVerification.Claims
-                .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti);
-            if(jtiClaim == null)
-            {
-                throw new BadRequestException("Token JTI is missing");
-            }
-            var jti = jtiClaim.Value;
-            var getRefreshToken = await _refreshTokenRepository.GetByTokenAsync(tokenReset.RefreshToken);
-            if (getRefreshToken == null)
-            {
-                throw new BadRequestException(
-                    "Refresh token does not exist in our database"
-                );
-            }
-            if (getRefreshToken.JwtId != jti)
-            {
-                throw new BadRequestException("Refresh token does not match the JWT");
-            }
-            if (getRefreshToken.ExpiredAt <= DateTime.UtcNow)
-            {
-                throw new BadRequestException(
-                    "Your refresh token has expired. Please authenticate again."
-                );
-            }
-            if (getRefreshToken.IsRevoked)
-            {
-                throw new BadRequestException("Refresh token has been revoked");
-            }
-            var getUser = await _userRepository.GetByIdAsync(getRefreshToken.UserId);
-            if (getUser == null)
-            {
-                throw new BadRequestException("User associated with token was not found");
-            }
-            var role = await _userRepository.GetRoleAsync(getUser);
-            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser, role);
-            var newRefreshToken = await _refreshTokenService.CreateAsync(
-                getUser,
-                jwtResult.JwtId,
-                tokenReset.RefreshToken
-            );
-            return new AuthResponseDto
-            {
-                Token = jwtResult.Token,
-                RefreshToken = newRefreshToken.Token,
-                ExpiresAt = jwtResult.ExpiresAt,
-                User = new UserReadDto
-                {
-                    Id = getUser.Id,
-                    FullName = getUser.FullName,
-                    UserName = getUser.UserName ?? string.Empty,
-                    Email = getUser.Email ?? string.Empty
-                },
-            };
+
+            jwtToken = validatedToken as JwtSecurityToken
+                ?? throw new BadRequestException("Invalid token format.");
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            jwtToken = jwtTokenHandler.ReadJwtToken(tokenReset.Token);
         }
         catch (SecurityTokenException)
         {
-            var getRefreshToken = await _refreshTokenRepository.GetByTokenAsync(tokenReset.RefreshToken);
-            if (getRefreshToken == null)
-            {
-                throw new BadRequestException(
-                    "Refresh token does not exist in your database"
-                );
-            }
-            var getUser = await _userRepository.GetByIdAsync(getRefreshToken.UserId);
-            if (getUser == null)
-            {
-                throw new BadRequestException("User associated with token was not found");
-            }
-            var role = await _userRepository.GetRoleAsync(getUser);
-            var jwtResult = _jwtService.GenerateJwtTokenAsync(getUser, role);
-            var newRefreshToken = await _refreshTokenService.CreateAsync(
-                getUser,
-                jwtResult.JwtId,
-                tokenReset.RefreshToken
-            );
-            return new AuthResponseDto
-            {
-                Token = jwtResult.Token,
-                RefreshToken = newRefreshToken.Token,
-                ExpiresAt = jwtResult.ExpiresAt,
-                User = new UserReadDto
-                {
-                    Id = getUser.Id,
-                    FullName = getUser.FullName,
-                    UserName = getUser.UserName ?? string.Empty,
-                    Email = getUser.Email ?? string.Empty
-                },
-            };
+            throw new BadRequestException("Invalid access token.");
         }
+
+        if (!jwtToken.Header.Alg.Equals(
+                SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase))
+        {
+            throw new BadRequestException("Invalid token algorithm.");
+        }
+
+        var jti = jwtToken.Claims
+            .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti)
+            ?.Value;
+
+        if (string.IsNullOrWhiteSpace(jti))
+        {
+            throw new BadRequestException("Token JTI is missing.");
+        }
+
+        var refreshToken = await _refreshTokenRepository
+            .GetByTokenAsync(tokenReset.RefreshToken);
+
+        if (refreshToken == null)
+        {
+            throw new BadRequestException(
+                "Refresh token does not exist in our database."
+            );
+        }
+
+        if (refreshToken.JwtId != jti)
+        {
+            throw new BadRequestException(
+                "Refresh token does not match the JWT."
+            );
+        }
+
+        if (refreshToken.IsRevoked)
+        {
+            throw new BadRequestException(
+                "Refresh token has been revoked."
+            );
+        }
+
+        if (refreshToken.ExpiredAt <= DateTime.UtcNow)
+        {
+            throw new BadRequestException(
+                "Your refresh token has expired. Please authenticate again."
+            );
+        }
+        var user = await _userRepository
+            .GetByIdAsync(refreshToken.UserId);
+
+        if (user == null)
+        {
+            throw new BadRequestException(
+                "User associated with token was not found."
+            );
+        }
+        var role = await _userRepository.GetRoleAsync(user);
+        var jwtResult = _jwtService.GenerateJwtTokenAsync(user, role);
+        var newRefreshToken = await _refreshTokenService.CreateAsync(
+            user,
+            jwtResult.JwtId,
+            tokenReset.RefreshToken
+        );
+        return new AuthResponseDto
+        {
+            Token = jwtResult.Token,
+            RefreshToken = newRefreshToken.Token,
+            ExpiresAt = jwtResult.ExpiresAt,
+            User = new UserReadDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty
+            }
+        };
     }
 
     private DateTime UnixTimeStampToDateTimeInUTC(long utcExpireyDate)
