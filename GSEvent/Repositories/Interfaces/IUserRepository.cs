@@ -17,5 +17,6 @@ public interface IUserRepository
     Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
     Task<bool> ExistsByPhoneAsync(string phone);
     Task <string> UserConfirmationAsync(ApplicationUser user);
+    Task<bool> UserConfirmedAsync(ApplicationUser user, string token);
 
 }

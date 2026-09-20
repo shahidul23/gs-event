@@ -9,4 +9,5 @@ public interface IAuthService
     Task<AuthResponseDto?> LoginAsync(LoginDto loginDto);
     Task<AuthResponseDto?> VerifyAndGenerateTokenAsync(TokenResetDto tokenReset);
     Task<bool> LogoutAsync(LogoutDto logout);
+    Task<bool> VerifyEmailAsync(EmailVerificationDto emailVerification);
 }

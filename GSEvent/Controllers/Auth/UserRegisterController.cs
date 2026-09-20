@@ -20,7 +20,6 @@ namespace GSEvent.Controllers.Auth
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var user = await _authService.RegisterAsync(dto);
-            Console.WriteLine(user);
             if(user == null)
             {
                 return BadRequest(
@@ -33,6 +32,33 @@ namespace GSEvent.Controllers.Auth
                     user,
                     "User registered successfully.",
                     StatusCodes.Status201Created
+                )
+            );
+        }
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string username, [FromQuery] string token)
+        {
+            var dto = new EmailVerificationDto
+            {
+                Username = username,
+                Token = token
+            };
+            var result = await _authService.VerifyEmailAsync(dto);
+            if (!result)
+            {
+                return BadRequest(
+                    ApiResponse<object>.ErrorResponse(
+                        "Email verification failed",
+                        StatusCodes.Status400BadRequest,
+                        new[] { "Invalid or expired verification token." }
+                    )
+                );
+            }
+
+            return Ok(
+                ApiResponse<object>.SuccessResponse(
+                    null,
+                    "Email verified successfully."
                 )
             );
         }

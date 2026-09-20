@@ -60,13 +60,14 @@ public static class ServiceExtensions
         });
         services.AddAuthorization();
         services.Configure<RabbitMqSettings>(
-            configuration.GetSection("RabbitMq")
+            configuration.GetSection("RabbitMQ")
         );
         services.Configure<SmtpSettings>(
             configuration.GetSection("Smtp")
         );
         services.AddScoped<IEmailService, EmailService>();
         services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+        services.AddSingleton<IRabbitMqConnection, RabbitMqConnection>();
         services.AddHostedService<EmailVerificationConsumer>();
         return services;
     }

@@ -96,4 +96,10 @@ public class UserRepository : IUserRepository
     {
         return await _userManager.GenerateEmailConfirmationTokenAsync(user);
     }
+
+    public async Task<bool> UserConfirmedAsync(ApplicationUser user, string token)
+    {
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        return result.Succeeded;
+    }
 }

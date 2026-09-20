@@ -107,13 +107,6 @@ public class AuthService : IAuthService
         {
             throw new ConflictException($"{register.Email} Mail Already Exist");
         }
-        var existingUsername = await _userRepository
-            .ExistsByUsernameAsync(register.UserName);
-
-        if (existingUsername)
-        {
-            throw new ConflictException($"{register.UserName} Username Already Exist");
-        }
         var existingByPhone = await _userRepository.ExistsByPhoneAsync(register.Phone);
         if (existingByPhone)
         {
@@ -123,13 +116,12 @@ public class AuthService : IAuthService
         var newUser = new ApplicationUser()
         {
             FullName = register.FullName,
-            UserName = register.UserName,
+            UserName = register.Email.Split('@')[0],
             Email = register.Email,
             PhoneNumber = register.Phone,
             Address = register.Address,
             SecurityStamp = Guid.NewGuid().ToString()
         };
-        Console.WriteLine(newUser.UserName);
 
         var createUser = await _userRepository.CreateAsync(newUser, register.Password);
 
@@ -270,10 +262,40 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<bool> VerifyEmailAsync(EmailVerificationDto emailVerification)
+    {
+        var user = await _userRepository.GetByUsernameAsync(emailVerification.Username);
+        
+        if (user == null)
+        {
+            return false;
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return true;
+        }
+        string decodedToken;
+        try
+        {
+            decodedToken = Encoding.UTF8.GetString(
+                WebEncoders.Base64UrlDecode(emailVerification.Token)
+            );
+        }
+        catch
+        {
+            
+            return false;
+        }
+        var result = await _userRepository.UserConfirmedAsync(user, decodedToken);
+        return result;
+    }
+
     private DateTime UnixTimeStampToDateTimeInUTC(long utcExpireyDate)
     {
         var dateTimeVal = new DateTime(1970,1,1,0,0,0,0, DateTimeKind.Utc);
         dateTimeVal = dateTimeVal.AddSeconds(utcExpireyDate);
         return dateTimeVal;
     }
+    
 }

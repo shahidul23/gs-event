@@ -11,26 +11,22 @@ namespace GSEvent.RabbitMQ.Service;
 public class RabbitMqPublisher : IRabbitMqPublisher
 {
     private readonly RabbitMqSettings _mqSettings;
-    public RabbitMqPublisher(IOptions<RabbitMqSettings> options)
+    private readonly IRabbitMqConnection _rabbitMqConnection;
+    public RabbitMqPublisher(IOptions<RabbitMqSettings> options, IRabbitMqConnection rabbitMqConnection)
     {
         _mqSettings = options.Value;
+        _rabbitMqConnection = rabbitMqConnection;
     }
     public async Task PublishAsync<T>(RabbitMqQueue queue, T message)
     {
         var queueName = _mqSettings.Queues[queue];
-        var factory = new ConnectionFactory
-        {
-            HostName = _mqSettings.Host,
-            Port = _mqSettings.Port,
-            UserName = _mqSettings.Username,
-            Password = _mqSettings.Password
-        };
-        await using var connection = await factory.CreateConnectionAsync();
+       
+        await using var connection = await _rabbitMqConnection.CreateConnectionAsync(CancellationToken.None);
         await using var channel = await connection.CreateChannelAsync();
 
         await channel.QueueDeclareAsync(
             queue: queueName,
-            durable: false,
+            durable: true,
             exclusive: false,
             autoDelete: false
         );
@@ -38,7 +34,7 @@ public class RabbitMqPublisher : IRabbitMqPublisher
         var body = Encoding.UTF8.GetBytes(json);
         var properties = new BasicProperties
         {
-            Persistent = false
+            Persistent = true
         };
         await channel.BasicPublishAsync(
             exchange: string.Empty,
@@ -47,6 +43,6 @@ public class RabbitMqPublisher : IRabbitMqPublisher
             basicProperties: properties,
             body: body
         );
-        throw new NotImplementedException();
+        
     }
 }

@@ -5,6 +5,7 @@ using GSEvent.Email.Service.Interface;
 using GSEvent.Enums;
 using GSEvent.Exceptions;
 using GSEvent.RabbitMQ;
+using GSEvent.RabbitMQ.Service.Interface;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -15,27 +16,24 @@ public class EmailVerificationConsumer : BackgroundService
 {
     private readonly RabbitMqSettings _settings;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IRabbitMqConnection _rabbitMqConnection;
     private IConnection? _connection;
     private IChannel? _channel;
     public EmailVerificationConsumer(
        IOptions<RabbitMqSettings> options,
-       IServiceScopeFactory serviceScopeFactory
+       IServiceScopeFactory serviceScopeFactory,
+       IRabbitMqConnection rabbitMqConnection
     )
     {
         _settings = options.Value;
         _serviceScopeFactory = serviceScopeFactory; 
+        _rabbitMqConnection = rabbitMqConnection;
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var queueName = _settings.Queues[RabbitMqQueue.EmailVerification];
-        var factory = new ConnectionFactory
-        {
-            HostName = _settings.Host,
-            Port = _settings.Port,
-            UserName = _settings.Username,
-            Password = _settings.Password
-        };
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
+       
+        _connection = await _rabbitMqConnection.CreateConnectionAsync(stoppingToken);
         _channel = await _connection.CreateChannelAsync(
             cancellationToken: stoppingToken
         );
@@ -53,8 +51,8 @@ public class EmailVerificationConsumer : BackgroundService
             global: false,
             cancellationToken: stoppingToken
         );
-        var customer = new AsyncEventingBasicConsumer(_channel);
-        customer.ReceivedAsync += async (_, eventArgs) =>
+        var consumer  = new AsyncEventingBasicConsumer(_channel);
+        consumer.ReceivedAsync += async (_, eventArgs) =>
         {
             try
             {
@@ -74,7 +72,7 @@ public class EmailVerificationConsumer : BackgroundService
                 using var scope = _serviceScopeFactory.CreateScope();
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
                 var verificationUrl =
-                    $"http://localhost:8080/api/auth/verify-email" +
+                    $"http://localhost:5071/api/verify-email" +
                     $"?username={Uri.EscapeDataString(message.UserName)}" +
                     $"&token={Uri.EscapeDataString(message.VerificationToken)}";
                 await emailService.SendVerificationEmailAsync(
@@ -88,6 +86,13 @@ public class EmailVerificationConsumer : BackgroundService
                 );
 
             }
+            catch (OperationCanceledException)
+            when (stoppingToken.IsCancellationRequested)
+            {
+                Console.WriteLine(
+                    $"Email verification failed"
+                );
+            }
             catch (Exception ex)
             {
                 Console.WriteLine(
@@ -97,14 +102,14 @@ public class EmailVerificationConsumer : BackgroundService
                 await _channel.BasicNackAsync(
                     eventArgs.DeliveryTag,
                     multiple: false,
-                    requeue: true
+                    requeue: false
                 );
             }
         };
         await _channel.BasicConsumeAsync(
             queue: queueName,
             autoAck: false,
-            consumer: customer,
+            consumer: consumer,
             cancellationToken: stoppingToken
         );
         await Task.Delay(
