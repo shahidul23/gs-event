@@ -112,11 +112,12 @@ public class AuthService : IAuthService
         {
             throw new ConflictException($"{register.Phone} Phone Already Exist");
         }
+        var username = await _userRepository.GenerateUsernameAsync(register.Email);
 
         var newUser = new ApplicationUser()
         {
             FullName = register.FullName,
-            UserName = register.Email.Split('@')[0],
+            UserName = username,
             Email = register.Email,
             PhoneNumber = register.Phone,
             Address = register.Address,

@@ -18,5 +18,6 @@ public interface IUserRepository
     Task<bool> ExistsByPhoneAsync(string phone);
     Task <string> UserConfirmationAsync(ApplicationUser user);
     Task<bool> UserConfirmedAsync(ApplicationUser user, string token);
+    Task<string> GenerateUsernameAsync(string email);
 
 }

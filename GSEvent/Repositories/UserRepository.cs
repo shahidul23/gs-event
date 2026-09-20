@@ -66,6 +66,21 @@ public class UserRepository : IUserRepository
         return await _userManager.FindByNameAsync(username) is not null;
     }
 
+    public async Task<string> GenerateUsernameAsync(string email)
+    {
+        var username = email.Split('@')[0];
+        var originalUsername = username;
+        var counter = 1;
+        while (await _userManager.FindByNameAsync(username) != null)
+        {
+            username = $"{originalUsername}{counter}";
+
+            counter++;
+        }
+        return username;
+
+    }
+
     public async Task<ApplicationUser?> GetByEmailAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email);
