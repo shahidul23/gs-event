@@ -2,7 +2,6 @@ using System;
 using System.Security.Claims;
 using GSEvent.DTOs.Auth;
 using GSEvent.Exceptions;
-using GSEvent.Models;
 using GSEvent.Repositories.Interfaces;
 using GSEvent.Services.Interfaces;
 
@@ -52,6 +51,35 @@ public class PasswordService : IPasswordService
                 )
             );
             throw new BadRequestException(errors);
+        }
+        return string.Empty;
+    }
+
+    public async Task<bool> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
+    {
+        var result = await _passwordRepository.GeneratePasswordResetTokenAsync(forgotPasswordDto.Email);
+        if (!result)
+        {
+            throw new BadRequestException(
+                "Failed to generate password reset token."
+            );
+        }
+        return true;
+    }
+
+    public async Task<string> ResetPasswordAsync(
+        ResetPasswordDto request
+    )
+    {
+        var result = await _passwordRepository.ResetPasswordAsync(
+            request
+        );
+
+        if (!result)
+        {
+            throw new BadRequestException(
+                "Failed to reset password."
+            );
         }
         return string.Empty;
     }

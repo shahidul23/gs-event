@@ -2,11 +2,12 @@ using System;
 
 namespace GSEvent.Email.Service.Interface;
 
-public interface IEmailService
+public interface IVerificationEmailService
 {
     Task SendVerificationEmailAsync(
         string email,
         string userName,
-        string verificationUrl
+        string verificationUrl,
+        CancellationToken cancellationToken = default
     );
 }

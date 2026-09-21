@@ -42,6 +42,22 @@ namespace GSEvent.Controllers.Auth
             );
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(
+            [FromBody] ForgotPasswordDto dto)
+        {
+            await _passwordService.ForgotPasswordAsync(dto);
+
+            return Ok(
+                ApiResponse<object>.SuccessResponse(
+                    null,
+                    "If the email exists, a password reset link has been sent.",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
+
+
         
     }
 }

@@ -65,10 +65,13 @@ public static class ServiceExtensions
         services.Configure<SmtpSettings>(
             configuration.GetSection("Smtp")
         );
-        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IPasswordResetEmailService, PasswordResetEmailService>();
+        services.AddScoped<IVerificationEmailService, VerificationEmailService>();
         services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
         services.AddSingleton<IRabbitMqConnection, RabbitMqConnection>();
         services.AddHostedService<EmailVerificationConsumer>();
+        services.AddHostedService<PasswordResetConsumer>();
         return services;
     }
 }
