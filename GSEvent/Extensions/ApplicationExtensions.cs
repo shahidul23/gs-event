@@ -33,6 +33,7 @@ public static class ApplicationExtensions
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPasswordRepository, PasswordRepository>();
         
 
 
@@ -40,6 +41,7 @@ public static class ApplicationExtensions
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPasswordService, PasswordService>();
         // Controllers
         services.AddControllers();
         // AutoMapper
