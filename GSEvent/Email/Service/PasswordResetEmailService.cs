@@ -23,7 +23,7 @@ public class PasswordResetEmailService : IPasswordResetEmailService
         {
             To = email,
             Subject =
-                "Reset your Gulshan Society Event Management password",
+                "Reset your password",
             HtmlBody = BuildPasswordResetEmail(
                 userName,
                 resetUrl

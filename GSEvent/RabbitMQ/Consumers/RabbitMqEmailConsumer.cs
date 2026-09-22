@@ -15,17 +15,20 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
     private readonly RabbitMqSettings _settings;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IRabbitMqConnection _rabbitMqConnection;
+    private readonly ILogger<RabbitMqEmailConsumer<TMessage>> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
     protected RabbitMqEmailConsumer(
         IOptions<RabbitMqSettings> options,
         IServiceScopeFactory serviceScopeFactory,
-        IRabbitMqConnection rabbitMqConnection
+        IRabbitMqConnection rabbitMqConnection,
+        ILogger<RabbitMqEmailConsumer<TMessage>> logger
     )
     {
         _settings = options.Value;
         _serviceScopeFactory = serviceScopeFactory;
         _rabbitMqConnection = rabbitMqConnection;
+        _logger = logger;
     }
     protected abstract RabbitMqQueue Queue {get;}
     protected abstract Task HandleMessageAsync(
@@ -36,6 +39,10 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var queueName = _settings.Queues[Queue];
+        _logger.LogInformation(
+            "Starting RabbitMQ consumer for queue: {QueueName}",
+            queueName
+        );
         _connection = await _rabbitMqConnection.CreateConnectionAsync(stoppingToken);
         _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
         await _channel.QueueDeclareAsync(
@@ -62,6 +69,10 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
                 var message = JsonSerializer.Deserialize<TMessage>(json);
                 if (message == null)
                 {
+                    _logger.LogWarning(
+                        "Invalid message received from queue: {QueueName}",
+                        queueName
+                    );
                     await _channel.BasicNackAsync(
                         eventArgs.DeliveryTag,
                         multiple:false,
@@ -79,6 +90,10 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
                     eventArgs.DeliveryTag,
                     multiple:false
                 );
+                 _logger.LogInformation(
+                    "Message processed successfully from queue: {QueueName}",
+                    queueName
+                );
             }
             catch (OperationCanceledException)
                 when (stoppingToken.IsCancellationRequested)
@@ -86,11 +101,20 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
                 Console.WriteLine(
                     $"{GetType().Name} stopped."
                 );
+                 _logger.LogInformation(
+                    "RabbitMQ consumer stopped: {QueueName}",
+                    queueName
+                );
             }
             catch (Exception ex)
             {
                 Console.WriteLine(
                     $"{GetType().Name} failed: {ex.Message}"
+                );
+                _logger.LogError(
+                    ex,
+                    "Error processing message from queue: {QueueName}",
+                    queueName
                 );
 
                 await _channel.BasicNackAsync(
@@ -106,6 +130,10 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
             consumer: consumer,
             cancellationToken: stoppingToken
         );
+        _logger.LogInformation(
+            "RabbitMQ consumer started successfully: {QueueName}",
+            queueName
+        );
 
         await Task.Delay(
             Timeout.Infinite,
@@ -115,6 +143,10 @@ public abstract class RabbitMqEmailConsumer<TMessage> : BackgroundService
     public override async Task StopAsync(
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation(
+            "Stopping RabbitMQ consumer: {Consumer}",
+            GetType().Name
+        );
         if (_channel != null)
         {
             await _channel.CloseAsync(

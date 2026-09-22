@@ -13,8 +13,9 @@ public class EmailVerificationConsumer : RabbitMqEmailConsumer<EmailVerification
     public EmailVerificationConsumer(
        IOptions<RabbitMqSettings> options,
        IServiceScopeFactory serviceScopeFactory,
-       IRabbitMqConnection rabbitMqConnection
-    ) : base(options, serviceScopeFactory, rabbitMqConnection)
+       IRabbitMqConnection rabbitMqConnection,
+       ILogger<RabbitMqEmailConsumer<EmailVerificationMessage>> logger
+    ) : base(options, serviceScopeFactory, rabbitMqConnection, logger)
     {
     }
     protected override RabbitMqQueue Queue => RabbitMqQueue.EmailVerification;
@@ -27,12 +28,12 @@ public class EmailVerificationConsumer : RabbitMqEmailConsumer<EmailVerification
         var emailService = serviceProvider.GetRequiredService<IVerificationEmailService>();
         var verificationUrl =
             $"http://localhost:5071/api/verify-email" +
-            $"?username={Uri.EscapeDataString(message.UserName)}" +
+            $"?username={Uri.EscapeDataString(message.FullName)}" +
             $"&token={Uri.EscapeDataString(message.VerificationToken)}";
             
         await emailService.SendVerificationEmailAsync(
             message.Email,
-            message.UserName,
+            message.FullName,
             verificationUrl
         );
     }  

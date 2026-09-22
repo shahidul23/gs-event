@@ -56,8 +56,24 @@ namespace GSEvent.Controllers.Auth
                 )
             );
         }
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+            [FromForm] ResetPasswordDto dto,
+            [FromQuery] string email,
+            [FromQuery] string token)
+        {
+            dto.Email = email;
+            dto.Token = token;
 
+            await _passwordService.ResetPasswordAsync(dto);
 
-        
+            return Ok(
+                ApiResponse<object>.SuccessResponse(
+                    null,
+                    "Password reset successfully.",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
     }
 }

@@ -50,7 +50,7 @@ public class PasswordRepository : IPasswordRepository
             new PasswordResetEmailMessage
             {
                 Email = user.Email ?? string.Empty,
-                Username = user.UserName ?? string.Empty,
+                FullName = user.FullName ?? string.Empty,
                 Token = encodedToken 
             }
         );

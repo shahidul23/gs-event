@@ -13,8 +13,9 @@ public class PasswordResetConsumer : RabbitMqEmailConsumer<PasswordResetEmailMes
     public PasswordResetConsumer(
        IOptions<RabbitMqSettings> options,
        IServiceScopeFactory serviceScopeFactory,
-       IRabbitMqConnection rabbitMqConnection
-    ) : base(options, serviceScopeFactory, rabbitMqConnection)
+       IRabbitMqConnection rabbitMqConnection,
+       ILogger<RabbitMqEmailConsumer<PasswordResetEmailMessage>> logger
+    ) : base(options, serviceScopeFactory, rabbitMqConnection, logger)
     {
     }
     protected override RabbitMqQueue Queue => RabbitMqQueue.PasswordReset;
@@ -28,13 +29,13 @@ public class PasswordResetConsumer : RabbitMqEmailConsumer<PasswordResetEmailMes
         var emailService =
         serviceProvider.GetRequiredService<IPasswordResetEmailService>();
     var resetUrl =
-        $"http://localhost:5173/reset-password" +
+        $"http://localhost:5173/api/reset-password" +
         $"?email={Uri.EscapeDataString(message.Email)}" +
         $"&token={Uri.EscapeDataString(message.Token)}";
 
         await emailService.SendPasswordResetEmailAsync(
             message.Email,
-            message.Username,
+            message.FullName,
             resetUrl,
             cancellationToken
         );
