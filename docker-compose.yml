@@ -10,8 +10,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings__DefaultConnection: Host=${POSTGRES_HOST};Port=${POSTGRES_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-      RabbitMQ__Host: rabbitmq
-      RabbitMQ__Port: 5672
+      RabbitMQ__Host: ${RABBITMQ_HOST}
+      RabbitMQ__Port: ${RABBITMQ_PORT}
       RabbitMQ__Username: ${RABBITMQ_USER}
       RabbitMQ__Password: ${RABBITMQ_PASSWORD}
       Email__SmtpHost: ${SMTP_HOST}

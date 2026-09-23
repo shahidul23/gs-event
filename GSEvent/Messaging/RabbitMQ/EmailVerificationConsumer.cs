@@ -28,7 +28,7 @@ public class EmailVerificationConsumer : RabbitMqEmailConsumer<EmailVerification
         var emailService = serviceProvider.GetRequiredService<IVerificationEmailService>();
         var verificationUrl =
             $"http://localhost:5071/api/verify-email" +
-            $"?username={Uri.EscapeDataString(message.FullName)}" +
+            $"?username={Uri.EscapeDataString(message.Username)}" +
             $"&token={Uri.EscapeDataString(message.VerificationToken)}";
             
         await emailService.SendVerificationEmailAsync(

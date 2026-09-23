@@ -1,53 +1,37 @@
-/**
- * router/index.js - Vue Router Configuration
- *
- * This file configures the application routing using Vue Router 5.
- * It defines all routes and navigation structure for the SPA.
- *
- * Routing Features:
- * - Hash-based routing (createWebHashHistory) for static hosting compatibility
- * - Lazy loading for all route components (code splitting)
- * - Nested routes for layout-based navigation
- * - Automatic scroll to top on navigation
- *
- * Route Structure:
- * - Protected routes: Wrapped in DefaultLayout with sidebar and header
- * - Public routes: Login, Register, 404, 500 pages without layout
- *
- * Adding New Routes:
- * 1. Import component (use dynamic import for code splitting)
- * 2. Add route object to appropriate section
- * 3. Update _nav.js for sidebar navigation (if needed)
- *
- * @see https://router.vuejs.org/
- */
-
 import { h, resolveComponent } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
+import guestMiddleware from '@/middleware/guest'
+import authMiddleware from '@/middleware/auth'
 
 import DefaultLayout from '@/layouts/DefaultLayout'
-
-/**
- * Application routes configuration
- * @type {Array<Object>}
- */
 const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/pages/Login.vue'),
+
+    beforeEnter: guestMiddleware,
+  },
+
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/pages/Register.vue'),
+
+    beforeEnter: guestMiddleware,
+  },
   {
     path: '/',
     name: 'Home',
     component: DefaultLayout,
     redirect: '/dashboard',
+    beforeEnter: authMiddleware,
     children: [
       {
         path: '/dashboard',
         name: 'Dashboard',
-        // route level code-splitting
-        // this generates a separate chunk (about.[hash].js) for this route
-        // which is lazy-loaded when the route is visited.
         component: () =>
-          import(
-            /* webpackChunkName: "dashboard" */ '@/views/dashboard/Dashboard.vue'
-          ),
+          import(/* webpackChunkName: "dashboard" */ '@/views/dashboard/Dashboard.vue'),
       },
       {
         path: '/theme',
@@ -312,9 +296,9 @@ const routes = [
     ],
   },
   {
-    path: '/pages',
-    redirect: '/pages/404',
-    name: 'Pages',
+    path: '/errors',
+    redirect: '/errors/404',
+    name: 'Errors',
     component: {
       render() {
         return h(resolveComponent('router-view'))
@@ -331,17 +315,14 @@ const routes = [
         name: 'Page500',
         component: () => import('@/views/pages/Page500'),
       },
-      {
-        path: 'login',
-        name: 'Login',
-        component: () => import('@/views/pages/Login'),
-      },
-      {
-        path: 'register',
-        name: 'Register',
-        component: () => import('@/views/pages/Register'),
-      },
     ],
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+
+    component: () =>
+      import('@/views/pages/Page404.vue'),
   },
 ]
 

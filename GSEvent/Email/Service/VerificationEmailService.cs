@@ -40,7 +40,7 @@ public class VerificationEmailService : IVerificationEmailService
         return $"""
             <html>
             <body>
-                <h2>Welcome to GSEvent, {userName}!</h2>
+                <h2>Welcome to Gulshan Society, {userName}!</h2>
                 <p>
                     Thank you for registering.
                 </p>

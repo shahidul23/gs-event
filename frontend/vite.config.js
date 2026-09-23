@@ -17,7 +17,6 @@ export default defineConfig({
     },
 
     extensions: [
-      '.mjs',
       '.js',
       '.jsx',
       '.json',
