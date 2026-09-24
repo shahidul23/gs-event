@@ -16,17 +16,22 @@ const login = async () => {
   }
   loading.value = true
   try {
-    const response = await post('/auth/login', {
+    const response = await post('/login', {
       UsernameOrEmailOrPhone: username.value,
       password: password.value,
     })
     console.log(response);
-    const token = response.data?.data?.accessToken
+    const token = response.data?.data?.token
     if (!token) {
       toast('Login failed. Access token not found.');
       return
     }
     localStorage.setItem('access_token', token)
+    const refreshToken = response.data?.data?.refreshToken;
+    if (!refreshToken) {
+      toast("Refresh Token Not Found");
+      return
+    }
     await router.push({ name: 'Dashboard' })
   } catch (error) {
     toast.error(error.response?.data?.message || 'Invalid username or password.')

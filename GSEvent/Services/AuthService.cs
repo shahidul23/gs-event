@@ -143,7 +143,7 @@ public class AuthService : IAuthService
         );
         var message = new EmailVerificationMessage
         {
-            FullName = newUser.FullName,
+            Username = newUser.UserName,
             Email = newUser.Email,
             VerificationToken = encodedToken
         };

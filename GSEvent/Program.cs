@@ -32,15 +32,11 @@ if (app.Environment.IsDevelopment())
 // app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseExceptionHandler();
-
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
+app.UseCors("VueFrontend");
 app.MapGet("/", () => "Api is running");
 
 app.Run();

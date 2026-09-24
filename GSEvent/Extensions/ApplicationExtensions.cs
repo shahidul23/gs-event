@@ -64,9 +64,19 @@ public static class ApplicationExtensions
         // Exception handler
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
-
-
-        
+        var corsUrl = configuration["Cors:frontentUrl"] 
+            ?? throw new BadRequestException("Cors Url is missing from configuration.");
+        services.AddCors(optiopn =>
+        {
+            optiopn.AddPolicy("VueFrontend", policy =>
+            {
+                policy.WithOrigins(corsUrl)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+                   
+            });
+        });
         return services;
     }
 }

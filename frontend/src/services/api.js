@@ -2,7 +2,7 @@ import axios from 'axios';
 import toast from './toast';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5071/api',
 
     headers: {
         'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ api.interceptors.response.use(
          * Don't refresh if the refresh endpoint itself
          * returned 401.
          */
-        if (originalRequest?.url?.includes('/auth/refresh')) {
+        if (originalRequest?.url?.includes('/refresh-token')) {
             clearAuth();
 
             return Promise.reject(error);
@@ -106,6 +106,7 @@ api.interceptors.response.use(
 
         const refreshToken =
             localStorage.getItem('refresh_token');
+        const token = localStorage.getItem('access_token');
 
         /*
          * No refresh token means the user must log in again.
@@ -124,8 +125,9 @@ api.interceptors.response.use(
              * going through the same interceptor.
              */
             const response = await axios.post(
-                `${api.defaults.baseURL}/auth/refresh`,
+                `${api.defaults.baseURL}/refresh-token`,
                 {
+                    token,
                     refreshToken,
                 },
                 {
@@ -186,7 +188,6 @@ api.interceptors.response.use(
                 refreshError,
                 null
             );
-
 
             /*
              * Refresh token is invalid or expired.

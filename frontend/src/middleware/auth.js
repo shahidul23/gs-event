@@ -1,9 +1,10 @@
-export default function authMiddleware(to, from, next) {
+export default function authMiddleware(to, from) {
     const token = localStorage.getItem('access_token');
+
     if (!token) {
-        return next({
+        return {
             name: 'Login',
-        });
+        };
     }
-    next();
+    return true;
 }

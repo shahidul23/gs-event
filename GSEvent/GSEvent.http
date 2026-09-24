@@ -7,10 +7,19 @@ POST {{base_url}}/api/register
 Content-Type: application/json
 
 {
-    "userName": "shahidul",
-    "email": "shahidul@example.com",
-    "phone": "01712345678",
+    "fullname": "shahidul",
+    "email": "shahidul@gmail.com",
+    "phone": "01712345679",
     "address": "Dhaka, Bangladesh",
     "password": "Password@123",
     "confirmPassword": "Password@123"
+}
+
+### refresh-token
+POST {{base_url}}/api/refresh-token
+Content-Type: application/json
+
+{
+    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0YzMxMjFiYi0wNTIzLTQ0MTQtYWNlOC0wMmQwMmQyYWUwZjUiLCJuYW1laWQiOiI5MzFmNjA5My1jNGRkLTRmNjgtOTEyZC03ZjQxMmFhM2E2YWIiLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsMSIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTAyMzI2NzgsImV4cCI6MTc5MDIzMjk3OCwiaWF0IjoxNzkwMjMyNjc4LCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.B5GCItSloQCv1sP9cuEk3hNcWxvo4Odn07LgbuLpIVk",
+    "refreshToken" : "tx+rthBmwMbxUuzKcRocQVcIBtEOYbv8ELFmqkYWXWEV78+npZfRpWpYDIwcS5QZNiEc862y+y8gmyg8stOyvA=="
 }

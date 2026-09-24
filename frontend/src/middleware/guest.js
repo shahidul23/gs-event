@@ -1,9 +1,10 @@
-export default function guestMiddleware(to, from, next) {
+export default function guestMiddleware(to, from) {
     const token = localStorage.getItem('access_token');
     if (token) {
-        return next({
+        return {
             name: 'Dashboard',
-        });
+        };
     }
-    next();
+
+    return true;
 }
