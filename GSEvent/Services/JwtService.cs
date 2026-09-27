@@ -53,6 +53,10 @@ public class JwtService : IJwtService
                 user.UserName ?? string.Empty
             ),
             new Claim(
+                "fullName",
+                user.FullName
+            ),
+            new Claim(
                 ClaimTypes.Email,
                 user.Email ?? string.Empty
             ),

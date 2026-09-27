@@ -15,11 +15,28 @@ Content-Type: application/json
     "confirmPassword": "Password@123"
 }
 
+### login
+POST {{base_url}}/api/login
+Content-Type: application/json
+
+{
+    "UsernameOrEmailOrPhone":"shahidul@gmail.com",
+    "Password":"Password@123"
+}
+
 ### refresh-token
 POST {{base_url}}/api/refresh-token
 Content-Type: application/json
 
 {
-    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0YzMxMjFiYi0wNTIzLTQ0MTQtYWNlOC0wMmQwMmQyYWUwZjUiLCJuYW1laWQiOiI5MzFmNjA5My1jNGRkLTRmNjgtOTEyZC03ZjQxMmFhM2E2YWIiLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsMSIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTAyMzI2NzgsImV4cCI6MTc5MDIzMjk3OCwiaWF0IjoxNzkwMjMyNjc4LCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.B5GCItSloQCv1sP9cuEk3hNcWxvo4Odn07LgbuLpIVk",
-    "refreshToken" : "tx+rthBmwMbxUuzKcRocQVcIBtEOYbv8ELFmqkYWXWEV78+npZfRpWpYDIwcS5QZNiEc862y+y8gmyg8stOyvA=="
+    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlODU2YzAxMC0wZWVhLTQ2ZWQtODg2MS00NjIxZWIyMTA5YWMiLCJuYW1laWQiOiIwMWVkMzljMy0zYjZiLTRkNDEtYTVkMy03NmQ2MjIwOWMyNjciLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZW1haWwiOiJzaGFoaWR1bEBnbWFpbC5jb20iLCJyb2xlIjoiVXNlciIsIm5iZiI6MTc5MDQ5Nzc5OSwiZXhwIjoxNzkwNDk4MDk5LCJpYXQiOjE3OTA0OTc3OTksImlzcyI6IkdTRXZlbnQiLCJhdWQiOiJVc2VyIn0.05f0jjBzY4FGYTgLXq737lMNKKUIwQRmL1Op98OEKYw",
+    "refreshToken" : "LIVh93912ie1y27VSOMF2x41HO9zOUCbb6/I2f8qPdiyuypPfiE8Oeh66z8j3aA9wpbOipbzYwSQRr5ha6mN0w=="
+}
+
+### logout
+POST {{base_url}}/api/logout
+Content-Type: application/json
+
+{
+    "refreshToken": "VG9vtLV6xzPDAVuNuasYUzGT2HzE3U/pAVrNFEeralOrMWWVa8kQXLaiRnI1nSw9BgQMNMCfKh1ipV9cw2fUMQ=="
 }

@@ -1,6 +1,5 @@
 import { h, resolveComponent } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import guestMiddleware from '@/middleware/guest'
 import authMiddleware from '@/middleware/auth'
 
 import DefaultLayout from '@/layouts/DefaultLayout'
@@ -9,8 +8,7 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/pages/Login.vue'),
-
-    beforeEnter: guestMiddleware,
+    meta: { guestOnly: true },
   },
 
   {
@@ -18,20 +16,20 @@ const routes = [
     name: 'Register',
     component: () => import('@/views/pages/Register.vue'),
 
-    beforeEnter: guestMiddleware,
+    meta: { guestOnly: true },
   },
   {
     path: '/',
     name: 'Home',
     component: DefaultLayout,
     redirect: '/dashboard',
-    beforeEnter: authMiddleware,
     children: [
       {
         path: '/dashboard',
         name: 'Dashboard',
         component: () =>
           import(/* webpackChunkName: "dashboard" */ '@/views/dashboard/Dashboard.vue'),
+        meta: { requiresAuth: true },
       },
       {
         path: '/theme',
@@ -334,5 +332,6 @@ const router = createRouter({
     return { top: 0 }
   },
 })
+router.beforeEach(authMiddleware);
 
 export default router

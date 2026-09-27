@@ -1,56 +1,92 @@
 <script setup>
-import avatar from '@/assets/images/avatars/8.jpg'
+import { computed } from 'vue';
+import { jwtDecode } from 'jwt-decode';
+import { useAuthStore } from '@/stores/auth';
+import toast from '@/services/toast';
 
-const itemsCount = 42
+const authStore = useAuthStore();
+
+// Dynamically decode token
+const user = computed(() => {
+  const token = authStore.token || localStorage.getItem('access_token');
+  if (!token) return null;
+
+  try {
+    return jwtDecode(token);
+  } catch (error) {
+    toast.error('Invalid JWT token');
+    return null;
+  }
+});
+
+const fullName = computed(() => {
+  return user.value?.fullName || user.value?.nameid || 'User';
+});
+
+const initials = computed(() => {
+  const name = fullName.value;
+  if (!name) return 'U';
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0))
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+});
+
+const avatarColors = [
+  '#0d6efd',
+  '#6610f2',
+  '#6f42c1',
+  '#d63384',
+  '#dc3545',
+  '#fd7e14',
+  '#198754',
+  '#20c997',
+  '#0dcaf0',
+];
+
+const avatarColor = computed(() => {
+  let hash = 0;
+  for (let i = 0; i < fullName.value.length; i++) {
+    hash = fullName.value.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % avatarColors.length;
+  return avatarColors[index];
+});
+
+// Delegate logout action to Auth Store
+const handleLogout = async () => {
+  await authStore.logout();
+};
 </script>
 
 <template>
   <CDropdown placement="bottom-end" variant="nav-item">
     <CDropdownToggle class="py-0 pe-0" :caret="false">
-      <CAvatar :src="avatar" size="md" />
+      <CAvatar
+        size="md"
+        class="rounded-circle text-white fw-semibold"
+        :style="{ backgroundColor: avatarColor }"
+      >
+        {{ initials }}
+      </CAvatar>
     </CDropdownToggle>
     <CDropdownMenu class="pt-0">
       <CDropdownHeader
         component="h6"
-        class="bg-body-secondary text-body-secondary fw-semibold mb-2 rounded-top"
-      >
-        Account
-      </CDropdownHeader>
-      <CDropdownItem>
-        <CIcon icon="cil-bell" /> Updates
-        <CBadge color="info" class="ms-auto">{{ itemsCount }}</CBadge>
-      </CDropdownItem>
-      <CDropdownItem>
-        <CIcon icon="cil-envelope-open" /> Messages
-        <CBadge color="success" class="ms-auto">{{ itemsCount }}</CBadge>
-      </CDropdownItem>
-      <CDropdownItem>
-        <CIcon icon="cil-task" /> Tasks
-        <CBadge color="danger" class="ms-auto">{{ itemsCount }}</CBadge>
-      </CDropdownItem>
-      <CDropdownItem>
-        <CIcon icon="cil-comment-square" /> Comments
-        <CBadge color="warning" class="ms-auto">{{ itemsCount }}</CBadge>
-      </CDropdownItem>
-      <CDropdownHeader
-        component="h6"
         class="bg-body-secondary text-body-secondary fw-semibold my-2"
       >
-        Settings
+        {{ fullName }}
       </CDropdownHeader>
-      <CDropdownItem> <CIcon icon="cil-user" /> Profile </CDropdownItem>
-      <CDropdownItem> <CIcon icon="cil-settings" /> Settings </CDropdownItem>
-      <CDropdownItem>
-        <CIcon icon="cil-dollar" /> Payments
-        <CBadge color="secondary" class="ms-auto">{{ itemsCount }}</CBadge>
-      </CDropdownItem>
-      <CDropdownItem>
-        <CIcon icon="cil-file" /> Projects
-        <CBadge color="primary" class="ms-auto">{{ itemsCount }}</CBadge>
-      </CDropdownItem>
       <CDropdownDivider />
-      <CDropdownItem> <CIcon icon="cil-shield-alt" /> Lock Account </CDropdownItem>
-      <CDropdownItem> <CIcon icon="cil-lock-locked" /> Logout </CDropdownItem>
+      <CDropdownItem>
+        <CIcon icon="cil-shield-alt" /> Password change
+      </CDropdownItem>
+      <CDropdownItem @click="handleLogout" style="cursor: pointer;">
+        <CIcon icon="cil-lock-locked" /> Logout
+      </CDropdownItem>
     </CDropdownMenu>
   </CDropdown>
 </template>

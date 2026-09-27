@@ -1,268 +1,163 @@
+// src/services/api.js
 import axios from 'axios';
 import toast from './toast';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5071/api',
-
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5071/api',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
 });
 
-
 let isRefreshing = false;
-
 let failedQueue = [];
 
-
 const processQueue = (error, token = null) => {
-    failedQueue.forEach((promise) => {
-        if (error) {
-            promise.reject(error);
-        } else {
-            promise.resolve(token);
-        }
-    });
-    failedQueue = [];
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(token);
+    }
+  });
+  failedQueue = [];
 };
 
 const clearAuth = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    window.location.href = '/login';
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  window.location.href = '/login';
 };
 
-/*
- * Add access token to every request.
- */
+// Request Interceptor: Attach Access Token
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-/*
- * Handle expired access token.
- */
+// Response Interceptor: Handle Data Unwrapping & Refresh Logic
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    async (error) => {
-        const originalRequest = error.config;
+  (response) => {
+    // Return backend ApiResponse data directly ({ success, statusCode, message, data })
+    return response.data;
+  },
+  async (error) => {
+    const originalRequest = error.config;
 
-        /*
-         * Only handle 401 responses.
-         */
-        if (error.response?.status !== 401) {
-            return Promise.reject(error);
-        }
-
-        /*
-         * Don't retry the same request.
-         */
-        if (originalRequest?._retry) {
-            return Promise.reject(error);
-        }
-
-        /*
-         * Don't refresh if the refresh endpoint itself
-         * returned 401.
-         */
-        if (originalRequest?.url?.includes('/refresh-token')) {
-            clearAuth();
-
-            return Promise.reject(error);
-        }
-
-        /*
-         * If another request is already refreshing the token,
-         * wait for that request to finish.
-         */
-        if (isRefreshing) {
-            return new Promise((resolve, reject) => {
-                failedQueue.push({
-                    resolve,
-                    reject,
-                });
-            }).then((token) => {
-                originalRequest.headers.Authorization =
-                    `Bearer ${token}`;
-
-                return api(originalRequest);
-            });
-        }
-        originalRequest._retry = true;
-
-        isRefreshing = true;
-
-        const refreshToken =
-            localStorage.getItem('refresh_token');
-        const token = localStorage.getItem('access_token');
-
-        /*
-         * No refresh token means the user must log in again.
-         */
-        if (!refreshToken) {
-            isRefreshing = false;
-            clearAuth();
-            return Promise.reject(error);
-        }
-
-        try {
-            /*
-             * Use axios directly instead of api().
-             *
-             * This prevents the refresh request from
-             * going through the same interceptor.
-             */
-            const response = await axios.post(
-                `${api.defaults.baseURL}/refresh-token`,
-                {
-                    token,
-                    refreshToken,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                }
-            );
-
-            const data = response.data?.data;
-
-            if (!data?.accessToken || !data?.refreshToken) {
-                toast.error('Invalid refresh token response.');
-            }
-
-            /*
-             * Save the new access token.
-             */
-            localStorage.setItem(
-                'access_token',
-                data.accessToken
-            );
-
-            /*
-             * Save the new refresh token.
-             *
-             * Your backend rotates the refresh token,
-             * so the old refresh token must be replaced.
-             */
-            localStorage.setItem(
-                'refresh_token',
-                data.refreshToken
-            );
-
-            /*
-             * Resolve all queued requests.
-             */
-            processQueue(
-                null,
-                data.accessToken
-            );
-
-            /*
-             * Retry the original request.
-             */
-            originalRequest.headers.Authorization =
-                `Bearer ${data.accessToken}`;
-
-            return api(originalRequest);
-
-        } catch (refreshError) {
-
-            /*
-             * Reject all queued requests.
-             */
-            processQueue(
-                refreshError,
-                null
-            );
-
-            /*
-             * Refresh token is invalid or expired.
-             */
-            clearAuth();
-
-            return Promise.reject(refreshError);
-
-        } finally {
-            isRefreshing = false;
-        }
+    // 1. Network Failure
+    if (!error.response) {
+      toast.error('Network error. Please check your internet connection.');
+      return Promise.reject(error);
     }
+
+    const { status, data } = error.response;
+    const errorCode = data?.code;
+
+    // 2. Global Non-401 Error Handling
+    if (status !== 401) {
+      const errorMessage = data?.message || 'An unexpected error occurred.';
+      toast.error(errorMessage);
+      return Promise.reject(error.response?.data || error);
+    }
+
+    // 3. Prevent loop if Refresh endpoint itself returned 401
+    if (originalRequest?.url?.includes('/refresh-token')) {
+      processQueue(error, null);
+      clearAuth();
+      return Promise.reject(error);
+    }
+
+    // 4. Invalid or Revoked Access Token
+    if (errorCode === 'INVALID_ACCESS_TOKEN' || errorCode === 'ACCESS_TOKEN_REVOKED') {
+      clearAuth();
+      return Promise.reject(error);
+    }
+
+    // 5. Retry protection
+    if (originalRequest?._retry) {
+      return Promise.reject(error);
+    }
+
+    // 6. Queue concurrent requests while refreshing
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      })
+        .then((newToken) => {
+          originalRequest.headers = originalRequest.headers || {};
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
+        })
+        .catch((err) => Promise.reject(err));
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (!refreshToken) {
+      isRefreshing = false;
+      clearAuth();
+      return Promise.reject(error);
+    }
+
+    try {
+      const response = await axios.post(
+        `${api.defaults.baseURL}/refresh-token`,
+        {
+          token: accessToken,
+          refreshToken: refreshToken,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      const resData = response.data?.data;
+
+      if (!resData?.token || !resData?.refreshToken) {
+        throw new Error('Invalid refresh token response');
+      }
+
+      localStorage.setItem('access_token', resData.token);
+      localStorage.setItem('refresh_token', resData.refreshToken);
+
+      processQueue(null, resData.token);
+
+      originalRequest.headers = originalRequest.headers || {};
+      originalRequest.headers.Authorization = `Bearer ${resData.token}`;
+
+      return api(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      toast.error('Session expired. Please log in again.');
+      clearAuth();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  }
 );
 
-/*
- * GET
- */
-export const get = (url, params = {}, config = {}) => 
-{
-    return api.get(url, {
-        params,
-        ...config,
-    });
-};
-
-
-/*
- * POST
- */
-export const post = (url, data = {}, config = {}) => 
-{
-    return api.post(
-        url,
-        data,
-        config
-    );
-};
-
-
-/*
- * PUT
- */
-export const put = (url, data = {}, config = {}) =>
-{
-    return api.put(
-        url,
-        data,
-        config
-    );
-};
-
-
-/*
- * PATCH
- */
-export const patch = (url,data = {},config = {}) =>
-{
-    return api.patch(
-        url,
-        data,
-        config
-    );
-};
-
-/*
- * DELETE
- */
-export const remove = (url, config = {}) =>
-{
-    return api.delete(
-        url,
-        config
-    );
-};
-
+// HTTP Helper Functions
+export const get = (url, params = {}, config = {}) => api.get(url, { params, ...config });
+export const post = (url, data = {}, config = {}) => api.post(url, data, config);
+export const put = (url, data = {}, config = {}) => api.put(url, data, config);
+export const patch = (url, data = {}, config = {}) => api.patch(url, data, config);
+export const remove = (url, config = {}) => api.delete(url, config);
 
 export default api;
-

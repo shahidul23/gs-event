@@ -1,6 +1,7 @@
 using GSEvent.Common;
 using GSEvent.DTOs.Auth;
 using GSEvent.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GSEvent.Controllers.Auth
