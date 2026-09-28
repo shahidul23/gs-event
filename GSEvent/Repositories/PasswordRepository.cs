@@ -85,13 +85,7 @@ public class PasswordRepository : IPasswordRepository
         );
         if (!result.Succeeded)
         {
-            var errors = string.Join(
-                ", ",
-                result.Errors.Select(x =>
-                    $"{x.Code}: {x.Description}"
-                )
-            );
-
+            var errors = string.Join(" ", result.Errors.Select(error => error.Description));
             throw new BadRequestException(errors);
         }
 

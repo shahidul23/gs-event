@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import toast from '@/services/toast'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,7 +17,7 @@ const login = async () => {
   errorMessage.value = ''
   
   if (!username.value || !password.value) {
-    errorMessage.value = 'Username and password are required.'
+    toast.error('Username and password are required.')
     return
   }
 
@@ -34,7 +35,7 @@ const login = async () => {
     await router.push(redirectPath)
   } catch (error) {
     // If interceptor doesn't display message, show local alert fallback
-    errorMessage.value = error?.message || 'Invalid username or password.'
+    toast.error(error?.message || 'Invalid username or password.');
   } finally {
     loading.value = false
   }
@@ -52,10 +53,6 @@ const login = async () => {
                 <CForm @submit.prevent="login">
                   <h1>Login</h1>
                   <p class="text-body-secondary">Sign In to your account</p>
-
-                  <CAlert v-if="errorMessage" color="danger" class="mb-3">
-                    {{ errorMessage }}
-                  </CAlert>
 
                   <CInputGroup class="mb-3">
                     <CInputGroupText>

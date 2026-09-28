@@ -29,8 +29,8 @@ POST {{base_url}}/api/refresh-token
 Content-Type: application/json
 
 {
-    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2NmRhZDY4OC0yN2YzLTRhODItOWU2NS00MjQ4N2Y2M2ZkYjgiLCJuYW1laWQiOiIwMWVkMzljMy0zYjZiLTRkNDEtYTVkMy03NmQ2MjIwOWMyNjciLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJzaGFoaWR1bCIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTA1NzQyNjUsImV4cCI6MTc5MDU3NDU2NSwiaWF0IjoxNzkwNTc0MjY1LCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.FdALrX-56ro5968Tr9wqO8TlrpeedbTh2epxIDOLdKw",
-    "refreshToken" : "mBDTHDHQ3Vu71Jyva7K1TG0fI7vNOHcuaqwTV5/wRkQ/J5+QUSAeXdA8Acx1++LF5oD4/0g0NEYCaJCZPX2KtQ=="
+    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiM2IyMDUwNi00NGUxLTQ1YjctOTc2OS0yNDhkM2YyNzc2ZjIiLCJuYW1laWQiOiIwMWVkMzljMy0zYjZiLTRkNDEtYTVkMy03NmQ2MjIwOWMyNjciLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJzaGFoaWR1bCIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTA1OTQwODIsImV4cCI6MTc5MDU5NDM4MiwiaWF0IjoxNzkwNTk0MDgyLCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.I-_rkt4waMjGOPrJ_yol0AL4AvSiibcKVRaqwvAMubY",
+    "refreshToken" : "72IHsi+ytAhnsq7O3aEcMABWDJXcH6nmMWKZezYCVITpLD97UIAZVWEEDChu39rin5UJj9+Tl2vsQv6xH70qYg=="
 }
 
 ### logout
@@ -39,4 +39,14 @@ Content-Type: application/json
 
 {
     "refreshToken": "VG9vtLV6xzPDAVuNuasYUzGT2HzE3U/pAVrNFEeralOrMWWVa8kQXLaiRnI1nSw9BgQMNMCfKh1ipV9cw2fUMQ=="
+}
+
+### Change password
+POST {{base_url}}/api/change-password
+Content-Type: application/json
+Authorization:  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiM2IyMDUwNi00NGUxLTQ1YjctOTc2OS0yNDhkM2YyNzc2ZjIiLCJuYW1laWQiOiIwMWVkMzljMy0zYjZiLTRkNDEtYTVkMy03NmQ2MjIwOWMyNjciLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJzaGFoaWR1bCIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTA1OTQwODIsImV4cCI6MTc5MDU5NDM4MiwiaWF0IjoxNzkwNTk0MDgyLCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.I-_rkt4waMjGOPrJ_yol0AL4AvSiibcKVRaqwvAMubY
+
+{
+    "OldPassword":"Password@123",
+    "NewPassword":"new@1234678"
 }

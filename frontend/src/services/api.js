@@ -31,7 +31,7 @@ const clearAuth = () => {
   window.location.href = '/login';
 };
 
-// Request Interceptor: Attach Access Token
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -44,50 +44,41 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle Data Unwrapping & Refresh Logic
+// Response Interceptor
 api.interceptors.response.use(
-  (response) => {
-    // Return backend ApiResponse data directly ({ success, statusCode, message, data })
-    return response.data;
-  },
+  (response) => response.data,
   async (error) => {
     const originalRequest = error.config;
 
-    // 1. Network Failure
     if (!error.response) {
-      toast.error('Network error. Please check your internet connection.');
+      toast.error('Network error. Please check your connection.');
       return Promise.reject(error);
     }
 
     const { status, data } = error.response;
     const errorCode = data?.code;
 
-    // 2. Global Non-401 Error Handling
     if (status !== 401) {
       const errorMessage = data?.message || 'An unexpected error occurred.';
       toast.error(errorMessage);
       return Promise.reject(error.response?.data || error);
     }
 
-    // 3. Prevent loop if Refresh endpoint itself returned 401
     if (originalRequest?.url?.includes('/refresh-token')) {
       processQueue(error, null);
       clearAuth();
       return Promise.reject(error);
     }
 
-    // 4. Invalid or Revoked Access Token
     if (errorCode === 'INVALID_ACCESS_TOKEN' || errorCode === 'ACCESS_TOKEN_REVOKED') {
       clearAuth();
       return Promise.reject(error);
     }
 
-    // 5. Retry protection
     if (originalRequest?._retry) {
       return Promise.reject(error);
     }
 
-    // 6. Queue concurrent requests while refreshing
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -115,10 +106,7 @@ api.interceptors.response.use(
     try {
       const response = await axios.post(
         `${api.defaults.baseURL}/refresh-token`,
-        {
-          token: accessToken,
-          refreshToken: refreshToken,
-        },
+        { token: accessToken, refreshToken },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -130,7 +118,7 @@ api.interceptors.response.use(
       const resData = response.data?.data;
 
       if (!resData?.token || !resData?.refreshToken) {
-        throw new Error('Invalid refresh token response');
+        throw new Error('Invalid refresh response');
       }
 
       localStorage.setItem('access_token', resData.token);
@@ -153,7 +141,6 @@ api.interceptors.response.use(
   }
 );
 
-// HTTP Helper Functions
 export const get = (url, params = {}, config = {}) => api.get(url, { params, ...config });
 export const post = (url, data = {}, config = {}) => api.post(url, data, config);
 export const put = (url, data = {}, config = {}) => api.put(url, data, config);

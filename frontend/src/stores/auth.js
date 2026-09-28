@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import toast from '@/services/toast';
 import { authService } from '@/services/auth/authService';
 
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
@@ -41,7 +42,7 @@ export const useAuthStore = defineStore('auth', {
           toast.success(res.message || 'Logout successful');
         }
       } catch (error) {
-        console.warn('Backend revocation failed or token already revoked:', error);
+        console.warn('Backend logout failed or token already revoked:', error);
       } finally {
         this.user = null;
         this.token = null;
@@ -51,6 +52,18 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('user');
 
         window.location.href = '/login';
+      }
+    },
+    async changePassword(passwordData) {
+      try {
+        const res = await authService.passwordChange(passwordData);
+        if (res?.success) {
+          toast.success(res.message || 'Password changed successfully');
+          return res;
+        }
+      } catch (error) {
+        toast.error(error?.message || 'Failed to change password');
+        throw error;
       }
     },
   },

@@ -77,6 +77,7 @@ namespace GSEvent.Controllers.Auth
                 ApiResponse<AuthResponseDto>.SuccessResponse(user, "Login Successfull", StatusCodes.Status200OK)
             );
         }
+        [Authorize]
         [HttpPost("refresh-token")]
         public async Task<IActionResult>RefreshToken([FromBody] TokenResetDto token)
         {
@@ -102,6 +103,7 @@ namespace GSEvent.Controllers.Auth
                 )
             );
         }
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] LogoutDto logout)
         {
