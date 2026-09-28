@@ -185,6 +185,27 @@ public class AuthService : IAuthService
         {
             throw new BadRequestException("Invalid access token.");
         }
+        // 3. Get JWT expiration claim
+        var expiryClaim = jwtToken.Claims
+            .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp);
+
+        if (expiryClaim == null)
+        {
+            throw new UnauthorizedException( "Token expiration claim is missing." );
+        }
+
+        if (!long.TryParse(expiryClaim.Value, out var utcExpiryDate))
+        {
+            throw new UnauthorizedException( "Invalid token expiration value." );
+        }
+
+        var expiryDate = UnixTimeStampToDateTimeInUTC(utcExpiryDate);
+
+        // Access token must be expired before refresh
+        if (expiryDate > DateTime.UtcNow)
+        {
+            throw new UnauthorizedException ("Token has not expired yet");
+        }
 
         if (!jwtToken.Header.Alg.Equals(
                 SecurityAlgorithms.HmacSha256,
@@ -244,7 +265,7 @@ public class AuthService : IAuthService
         var role = await _userRepository.GetRoleAsync(user);
         var jwtResult = _jwtService.GenerateJwtTokenAsync(user, role);
         var newRefreshToken = await _refreshTokenService.CreateAsync(
-            user,
+            user, 
             jwtResult.JwtId,
             tokenReset.RefreshToken
         );

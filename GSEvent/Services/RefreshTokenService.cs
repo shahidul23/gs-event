@@ -29,9 +29,12 @@ public class RefreshTokenService : IRefreshTokenService
             {
                 if(!oldToken.IsRevoked && oldToken.ExpiredAt > DateTime.UtcNow)
                 {
+                    oldToken.JwtId = jwtId;
+                    await _refreshTokenRepository.UpdateAsync(oldToken);
                     return oldToken;
                 }
                 oldToken.IsRevoked = true;
+                
                 await _refreshTokenRepository.UpdateAsync(oldToken);
             }
         }
