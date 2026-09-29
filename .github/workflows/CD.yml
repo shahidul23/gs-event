@@ -59,28 +59,12 @@ jobs:
 
       - name: Verify Production Environment
         run: |
-          if [ ! -f .env ]; then
+          if [ ! -f /home/reddata/actions-runner/_work/gs-event/gs-event/.env ]; then
             echo "ERROR: .env does not exist."
             exit 1
           fi
 
           echo "Production .env found."
-
-
-      - name: Validate Docker Compose
-        run: |
-          docker compose config --quiet
-
-
-      - name: Pull Latest Images
-        run: |
-          docker compose pull
-
-
-      - name: Deploy Application
-        run: |
-          docker compose up -d --remove-orphans
-
 
       - name: Show Running Containers
         run: |
