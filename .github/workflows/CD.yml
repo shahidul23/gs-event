@@ -57,14 +57,29 @@ jobs:
           docker pull ghcr.io/shahidul23/gsevent-frontend:latest
 
 
-      - name: Verify Production Environment
+      - name: Prepare Production Environment
         run: |
-          if [ ! -f /home/reddata/actions-runner/_work/gs-event/gs-event/.env ]; then
-            echo "ERROR: .env does not exist."
-            exit 1
-          fi
+            if [ ! -f /home/reddata/gsevent/.env ]; then
+                echo "ERROR: Production .env does not exist."
+                exit 1
+            fi
+            cp /home/reddata/gsevent/.env .env
+            echo "Production .env copied successfully."
 
-          echo "Production .env found."
+      - name: Validate Docker Compose
+        run: |
+          docker compose config --quiet
+
+
+      - name: Pull Latest Images
+        run: |
+          docker compose pull
+
+
+      - name: Deploy Application
+        run: |
+          docker compose up -d --remove-orphans
+
 
       - name: Show Running Containers
         run: |
