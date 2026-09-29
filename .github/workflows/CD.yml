@@ -57,16 +57,10 @@ jobs:
           docker pull ghcr.io/shahidul23/gsevent-frontend:latest
 
 
-      - name: Prepare Production Directory
-        run: |
-          sudo mkdir -p /opt/gsevent
-          sudo cp docker-compose.yml /opt/gsevent/docker-compose.yml
-
-
       - name: Verify Production Environment
         run: |
-          if [ ! -f /opt/gsevent/.env ]; then
-            echo "ERROR: /opt/gsevent/.env does not exist."
+          if [ ! -f .env ]; then
+            echo "ERROR: .env does not exist."
             exit 1
           fi
 
@@ -74,25 +68,21 @@ jobs:
 
 
       - name: Validate Docker Compose
-        working-directory: /opt/gsevent
         run: |
           docker compose config --quiet
 
 
       - name: Pull Latest Images
-        working-directory: /opt/gsevent
         run: |
           docker compose pull
 
 
       - name: Deploy Application
-        working-directory: /opt/gsevent
         run: |
           docker compose up -d --remove-orphans
 
 
       - name: Show Running Containers
-        working-directory: /opt/gsevent
         run: |
           docker compose ps
 
@@ -126,7 +116,6 @@ jobs:
 
       - name: Show Application Logs
         if: failure()
-        working-directory: /opt/gsevent
         run: |
           docker compose ps
           docker compose logs --tail=100
