@@ -5,24 +5,71 @@ on:
 
 jobs:
   test:
+    name: Test Self-Hosted Runner
+
     runs-on: self-hosted
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Runner information
+      - name: Runner Information
         run: |
-          echo "GitHub Runner is working!"
+          echo "========================================"
+          echo "GitHub Actions Self-Hosted Runner"
+          echo "========================================"
           echo "User: $(whoami)"
-          echo "Host: $(hostname)"
+          echo "Hostname: $(hostname)"
+          echo "Working Directory: $(pwd)"
+          echo "Operating System:"
+          uname -a
+          echo ""
 
-      - name: Docker
+      - name: Check Git
         run: |
+          echo "Git Version:"
+          git --version
+          echo ""
+
+      - name: Check Docker
+        run: |
+          echo "Docker Version:"
           docker --version
-          docker compose version
-          docker ps
+          echo ""
 
-      - name: .NET
+          echo "Docker Compose Version:"
+          docker compose version
+          echo ""
+
+          echo "Running Containers:"
+          docker ps
+          echo ""
+
+      - name: Check .NET
         run: |
+          echo ".NET Version:"
           dotnet --version
+          echo ""
+
+          echo ".NET SDK Information:"
+          dotnet --info
+
+      - name: Check Repository
+        run: |
+          echo "========================================"
+          echo "Repository Information"
+          echo "========================================"
+          echo "Current Directory:"
+          pwd
+          echo ""
+
+          echo "Repository Files:"
+          ls -la
+          echo ""
+
+      - name: Test Completed
+        run: |
+          echo "========================================"
+          echo "SUCCESS"
+          echo "GitHub Actions Runner is working correctly!"
+          echo "========================================"
