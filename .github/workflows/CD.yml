@@ -95,7 +95,7 @@ jobs:
 
       - name: Check Frontend
         run: |
-          if curl --fail --silent --show-error http://localhost:3000 > /dev/null; then
+          if curl --fail --silent --show-error http://172.16.16.169:3000 > /dev/null; then
             echo "Frontend is healthy."
           else
             echo "Frontend health check failed."
@@ -105,7 +105,7 @@ jobs:
 
       - name: Check Backend
         run: |
-          if curl --fail --silent --show-error http://localhost:8080 > /dev/null; then
+          if curl --fail --silent --show-error http://172.16.16.169:8080 > /dev/null; then
             echo "Backend is reachable."
           else
             echo "Backend health check failed."
