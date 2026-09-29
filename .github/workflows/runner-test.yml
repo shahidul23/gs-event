@@ -1,0 +1,28 @@
+name: Runner Test
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Runner information
+        run: |
+          echo "GitHub Runner is working!"
+          echo "User: $(whoami)"
+          echo "Host: $(hostname)"
+
+      - name: Docker
+        run: |
+          docker --version
+          docker compose version
+          docker ps
+
+      - name: .NET
+        run: |
+          dotnet --version
