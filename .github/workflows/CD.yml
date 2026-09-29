@@ -44,8 +44,8 @@ jobs:
         uses: docker/build-push-action@v6
 
         with:
-          context: ./GSEvent
-          file: ./GSEvent/Dockerfile
+          context: .
+          file: Dockerfile
 
           push: true
 
