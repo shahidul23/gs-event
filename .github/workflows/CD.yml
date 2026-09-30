@@ -37,7 +37,7 @@ jobs:
 
       - name: Prepare Production Environment
         run: |
-          if [ ! -f /home/reddata/gsevent/.env ]; then
+          if [ ! -f /home/reddata/gsevent.env ]; then
               echo "ERROR: Production .env does not exist."
               exit 1
           fi
@@ -67,7 +67,17 @@ jobs:
       - name: Wait for Application
         run: |
           echo "Waiting for services to start..."
-          sleep 15
+          sleep 20  # Increase from 15 to 20 seconds
+          
+          # Add database readiness check
+          for i in {1..30}; do
+            if docker exec gsevent-postgres pg_isready -U postgres > /dev/null 2>&1; then
+              echo "Database is ready"
+              break
+            fi
+            echo "Waiting for database... ($i/30)"
+            sleep 2
+          done
 
       - name: Check Frontend
         run: |
