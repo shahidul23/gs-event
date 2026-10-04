@@ -21,6 +21,9 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+import Vue3Toastify from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
+
 // CoreUI Vue components and icons
 import CoreuiVue from '@coreui/vue'
 import CIcon from '@coreui/icons-vue'
@@ -38,6 +41,10 @@ const app = createApp(App)
 app.use(createPinia()) // State management
 app.use(router) // Router for SPA navigation
 app.use(CoreuiVue) // CoreUI component library
+app.use(Vue3Toastify, {
+    autoClose: 3000,
+    position: 'top-right',
+})
 
 // Provide icons globally
 app.provide('icons', icons)

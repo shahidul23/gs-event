@@ -1,5 +1,5 @@
 // src/services/authService.js
-import { post } from "../api";
+import { post, get } from "../api";
 
 
 export const authService = {
@@ -12,9 +12,16 @@ export const authService = {
     return post('/logout', { refreshToken });
   },
   passwordChange(password){
-    return post('/change-password',{password});
+    return post('/change-password',password);
   },
+
   getProfile() {
     return get('/profile');
+  },
+  getAllRoles(){
+    return get('/get-roles');
+  },
+  register(paylod) {
+    return post('/register', paylod);
   },
 };

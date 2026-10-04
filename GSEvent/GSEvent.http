@@ -7,12 +7,13 @@ POST {{base_url}}/api/register
 Content-Type: application/json
 
 {
-    "fullname": "shahidul",
-    "email": "shahidul@gmail.com",
-    "phone": "01712345679",
+    "fullname": "Md. Shahidul Islam",
+    "email": "shahidulsi2@gmail.com",
+    "phone": "01967288481",
     "address": "Dhaka, Bangladesh",
     "password": "Password@123",
-    "confirmPassword": "Password@123"
+    "confirmPassword": "Password@123",
+    "role": 4
 }
 
 ### login
@@ -20,17 +21,20 @@ POST {{base_url}}/api/login
 Content-Type: application/json
 
 {
-    "UsernameOrEmailOrPhone":"shahidul@gmail.com",
+    "UsernameOrEmailOrPhone":"01967288481",
     "Password":"Password@123"
 }
+### get roles
+GET {{base_url}}/api/get-roles
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMzhmZThjOS1hMDE2LTRiZTYtOGJlMS1lZDk4M2Q4YWQ1YzAiLCJuYW1laWQiOiI5YjY5NjdiZC1hMmNiLTQ4MDUtYjM1Ni1lOTY4N2E2MDk1OTYiLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsc2kyIiwiZnVsbE5hbWUiOiJNZC4gU2hhaGlkdWwgSXNsYW0iLCJlbWFpbCI6InNoYWhpZHVsc2kyQGdtYWlsLmNvbSIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc5MTEwOTM5MywiZXhwIjoxNzkxMTA5NjkzLCJpYXQiOjE3OTExMDkzOTMsImlzcyI6IkdTRXZlbnQiLCJhdWQiOiJVc2VyIn0.Fhlk-YGssdu8HC5PFxSAAETVWZCXnVvo31BepGW956U
 
 ### refresh-token
 POST {{base_url}}/api/refresh-token
 Content-Type: application/json
 
 {
-    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiM2IyMDUwNi00NGUxLTQ1YjctOTc2OS0yNDhkM2YyNzc2ZjIiLCJuYW1laWQiOiIwMWVkMzljMy0zYjZiLTRkNDEtYTVkMy03NmQ2MjIwOWMyNjciLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJzaGFoaWR1bCIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTA1OTQwODIsImV4cCI6MTc5MDU5NDM4MiwiaWF0IjoxNzkwNTk0MDgyLCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.I-_rkt4waMjGOPrJ_yol0AL4AvSiibcKVRaqwvAMubY",
-    "refreshToken" : "72IHsi+ytAhnsq7O3aEcMABWDJXcH6nmMWKZezYCVITpLD97UIAZVWEEDChu39rin5UJj9+Tl2vsQv6xH70qYg=="
+    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNDAxMWNjZC1hZTFkLTQxYjQtYTYzMi0yMDI1ZjM2MjQxN2YiLCJuYW1laWQiOiI5NzZkZmJiZC1kMGE1LTQyNmMtOWNhYy1lZjcyOWQyYWY1YTMiLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJNZC4gU2hhaGlkdWwgSXNsYW0iLCJlbWFpbCI6InNoYWhpZHVsQGdtYWlsLmNvbSIsInJvbGUiOiJVc2VyIiwibmJmIjoxNzkxMDEwMzUwLCJleHAiOjE3OTEwMTA2NTAsImlhdCI6MTc5MTAxMDM1MCwiaXNzIjoiR1NFdmVudCIsImF1ZCI6IlVzZXIifQ.XQcbBrlkL-n7xC8qPk8YXWC83CG7IG-ZdFuzUIJ8Sg0",
+    "refreshToken" : "c+DDaPIHcpbRauXicrE3ZMhBuCDqKS6W5+bVNb/fH2dui/c310V/Q+IYdZSljtgetDRQrr6Tt4PrNoVvl4Yl4Q=="
 }
 
 ### logout
@@ -44,9 +48,10 @@ Content-Type: application/json
 ### Change password
 POST {{base_url}}/api/change-password
 Content-Type: application/json
-Authorization:  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiM2IyMDUwNi00NGUxLTQ1YjctOTc2OS0yNDhkM2YyNzc2ZjIiLCJuYW1laWQiOiIwMWVkMzljMy0zYjZiLTRkNDEtYTVkMy03NmQ2MjIwOWMyNjciLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJzaGFoaWR1bCIsImVtYWlsIjoic2hhaGlkdWxAZ21haWwuY29tIiwicm9sZSI6IlVzZXIiLCJuYmYiOjE3OTA1OTQwODIsImV4cCI6MTc5MDU5NDM4MiwiaWF0IjoxNzkwNTk0MDgyLCJpc3MiOiJHU0V2ZW50IiwiYXVkIjoiVXNlciJ9.I-_rkt4waMjGOPrJ_yol0AL4AvSiibcKVRaqwvAMubY
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjNGM0NjUxYi0yOTI3LTQ2MDQtODkyMS1mYmFmOWZlZjQ0ZTAiLCJuYW1laWQiOiI5NzZkZmJiZC1kMGE1LTQyNmMtOWNhYy1lZjcyOWQyYWY1YTMiLCJ1bmlxdWVfbmFtZSI6InNoYWhpZHVsIiwiZnVsbE5hbWUiOiJNZC4gU2hhaGlkdWwgSXNsYW0iLCJlbWFpbCI6InNoYWhpZHVsQGdtYWlsLmNvbSIsInJvbGUiOiJVc2VyIiwibmJmIjoxNzkxMDEwMDIxLCJleHAiOjE3OTEwMTAzMjEsImlhdCI6MTc5MTAxMDAyMSwiaXNzIjoiR1NFdmVudCIsImF1ZCI6IlVzZXIifQ.2q1XP3WfI3zGt1xlaKjKSxqrjrV2QfaAsH29XcqHGeU
 
 {
     "OldPassword":"Password@123",
-    "NewPassword":"new@1234678"
+    "NewPassword":"New@1234678",
+    "ConfirmPassword":"New@1234678"
 }

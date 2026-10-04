@@ -22,7 +22,7 @@ public static class ValidationExtensions
                     .ToDictionary(
                         x => x.Key,
                         x => x.Value!.Errors
-                            .SelectMany(e => string.IsNullOrWhiteSpace(e.ErrorMessage)
+                            .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage)
                                 ? "Invalid Value."
                                 : e.ErrorMessage)
                             .ToArray()

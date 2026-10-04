@@ -38,20 +38,10 @@ public class PasswordService : IPasswordService
         {
             throw new UnauthorizedException("User not found.");
         }
-        var result = await _passwordRepository.ChangePasswordAsync(
+        await _passwordRepository.ChangePasswordAsync(
             user,
             request
         );
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(
-                ", ",
-                result.Errors.Select(x =>
-                    $"{x.Code}: {x.Description}"
-                )
-            );
-            throw new BadRequestException(errors);
-        }
         return string.Empty;
     }
 

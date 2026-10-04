@@ -1,8 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { jwtDecode } from 'jwt-decode'
 import { useAuthStore } from '@/stores/auth'
 import toast from '@/services/toast' 
+import { CButton, CInputGroup } from '@coreui/vue'
+import CIcon from '@coreui/icons-vue'
+import { cilLockUnlocked, cilLockLocked } from '@coreui/icons'
 
 const authStore = useAuthStore()
 // Modal Visibility State
@@ -11,6 +14,10 @@ const oldPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
+const showOldPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
 
 // Dynamically decode token
 const user = computed(() => {
@@ -70,27 +77,36 @@ const goToPasswordChange = () => {
   showPasswordModal.value = true
 }
 const handlePasswordChange = async () => {
-  if (newPassword.value !== confirmPassword.value) {
-    toast.error('New passwords do not match')
-    return
-  }
+    if (!oldPassword.value) {
+        toast.error('Current password is required');
+        return;
+    }
+    if (!newPassword.value) {
+        toast.error('New password is required');
+        return;
+    }
+    if (newPassword.value !== confirmPassword.value) {
+        toast.error('New passwords do not match');
+        return;
+    }
+    loading.value = true;
+    try {
+        await authStore.changePassword({
+            OldPassword: oldPassword.value,
+            NewPassword: newPassword.value,
+            ConfirmPassword: confirmPassword.value
+        });
 
-  loading.value = true
-  try {
-    await authStore.changePassword({
-      OldPassword: oldPassword.value,
-      NewPassword: newPassword.value,
-      ConfirmPassword:confirmPassword.value
-    });
-    // Reset inputs on success
-    oldPassword.value = '';
-    newPassword.value = '';
-    confirmPassword.value = '';
-  } catch (error) {
-  } finally {
-    loading.value = false;
-  }
-}
+        oldPassword.value = '';
+        newPassword.value = '';
+        confirmPassword.value = '';
+    } catch (error) {
+        console.log(error);
+    } finally {
+        showPasswordModal.value = false;
+        loading.value = false;
+    }
+};
 </script>
 
 <template>
@@ -129,15 +145,30 @@ const handlePasswordChange = async () => {
       <CForm @submit.prevent="handlePasswordChange">
         <div class="mb-3">
           <CFormLabel>Current Password</CFormLabel>
-          <CFormInput v-model="oldPassword" type="password" required />
+          <CInputGroup>
+            <CFormInput v-model="oldPassword" :type="showOldPassword ? 'text' : 'password'" required />
+            <CButton type="button" color="secondary" variant="outline" @click="showOldPassword = !showOldPassword">
+              <CIcon :icon="showOldPassword ? cilLockUnlocked : cilLockLocked"></CIcon>
+            </CButton>
+          </CInputGroup>
         </div>
         <div class="mb-3">
           <CFormLabel>New Password</CFormLabel>
-          <CFormInput v-model="newPassword" type="password" required />
+          <CInputGroup>
+            <CFormInput v-model="newPassword" :type="showNewPassword ? 'text' : 'password'" required />
+            <CButton type="button" color="secondary" variant="outline" @click="showNewPassword = !showNewPassword">
+              <CIcon :icon="showNewPassword ? cilLockUnlocked : cilLockLocked"></CIcon>
+            </CButton>
+          </CInputGroup>
         </div>
         <div class="mb-3">
           <CFormLabel>Confirm New Password</CFormLabel>
-          <CFormInput v-model="confirmPassword" type="password" required />
+          <CInputGroup>
+            <CFormInput v-model="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" required />
+            <CButton type="button" color="secondary" variant="outline" @click="showConfirmPassword = !showConfirmPassword">
+              <CIcon :icon="showConfirmPassword ? cilLockUnlocked : cilLockLocked"></CIcon>
+            </CButton>
+          </CInputGroup>
         </div>
         <CModalFooter>
           <CButton color="secondary" @click="showPasswordModal = false">Cancel</CButton>

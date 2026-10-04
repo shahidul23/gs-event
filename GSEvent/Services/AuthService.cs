@@ -41,6 +41,26 @@ public class AuthService : IAuthService
         _roleRepository = roleRepository;
         _rabbitMqPublisher = rabbitMqPublisher;
     }
+
+    public async Task<List<ReadRoleDto>> GetAllRolesAsync(string currentRole)
+    {
+        if (!Enum.TryParse<Role>(currentRole, true, out var userRole))
+        {
+            return new List<ReadRoleDto>();
+        }
+        var roles = await _roleRepository.GetAllRolesAsync();
+
+        return roles
+            .Where(role => 
+                Enum.TryParse<Role>(role.Name, true, out var roleEnum) && roleEnum < userRole)
+            .Select(role => new ReadRoleDto
+            {
+                Id = role.Id,
+                Name = role.Name ?? string.Empty,
+                Value = (int)Enum.Parse<Role>(role.Name!)
+            }).ToList();
+    }
+
     public async Task<AuthResponseDto?> LoginAsync(LoginDto login)
     {
         ApplicationUser? existingUser;

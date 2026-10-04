@@ -1,8 +1,11 @@
 <script setup>
 import { ref } from 'vue'
+import { cilLockUnlocked, cilLockLocked } from '@coreui/icons'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import toast from '@/services/toast'
+import { CButton } from '@coreui/vue'
+import CIcon from '@coreui/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -12,6 +15,7 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
+const showPassword = ref(false)
 
 const login = async () => {
   errorMessage.value = ''
@@ -55,28 +59,30 @@ const login = async () => {
                   <p class="text-body-secondary">Sign In to your account</p>
 
                   <CInputGroup class="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon="cil-user" />
-                    </CInputGroupText>
+                    
                     <CFormInput
                       v-model="username"
-                      placeholder="Username, Email or Phone"
+                      placeholder="Email or Phone"
                       autocomplete="username"
                       required
                     />
+                    <CInputGroupText>
+                      <CIcon icon="cil-user" />
+                    </CInputGroupText>
                   </CInputGroup>
 
                   <CInputGroup class="mb-4">
-                    <CInputGroupText>
-                      <CIcon icon="cil-lock-locked" />
-                    </CInputGroupText>
                     <CFormInput
                       v-model="password"
-                      type="password"
+                      :type="showPassword ? 'text' : 'password'"
                       placeholder="Password"
                       autocomplete="current-password"
                       required
                     />
+                    <CInputGroupText type="button" color="secondary" variant="outline"
+                      @click="showPassword = !showPassword">
+                      <CIcon :icon="showPassword ? cilLockUnlocked : cilLockLocked"/>
+                    </CInputGroupText>
                   </CInputGroup>
 
                   <CRow>

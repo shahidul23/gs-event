@@ -24,14 +24,26 @@ public class PasswordRepository : IPasswordRepository
         _userManager = userManager;
         _rabbitMqPublisher = rabbitMqPublisher;
     }
-    public async Task<IdentityResult> ChangePasswordAsync(ApplicationUser user, ChangePasswordDto request)
+    public async Task ChangePasswordAsync(
+        ApplicationUser user,
+        ChangePasswordDto request)
     {
-        return await _userManager.ChangePasswordAsync(
+        var result = await _userManager.ChangePasswordAsync(
             user,
             request.OldPassword,
             request.NewPassword
         );
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors
+                .Select(error => error.Description)
+                .ToList();
+            throw new BadRequestException(string.Join(" ", errors));
+        }
     }
+
+
 
     public async Task<bool> GeneratePasswordResetTokenAsync(string email)
     {
@@ -85,8 +97,10 @@ public class PasswordRepository : IPasswordRepository
         );
         if (!result.Succeeded)
         {
-            var errors = string.Join(" ", result.Errors.Select(error => error.Description));
-            throw new BadRequestException(errors);
+            var errors = result.Errors
+                .Select(error => error.Description)
+                .ToList();
+            throw new BadRequestException(string.Join(" ", errors));
         }
 
         return true;

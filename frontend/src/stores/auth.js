@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('access_token') || null,
+    roles: [],
   }),
 
   getters: {
@@ -66,5 +67,32 @@ export const useAuthStore = defineStore('auth', {
         throw error;
       }
     },
+    async getAllRoles() {
+      try {
+        const res = await authService.getAllRoles();
+        if (res?.success) {
+          this.roles = res.data || [];
+
+          toast.success(res.message || 'Roles retrieved successfully');
+        }
+        return res;
+      } catch (error) {
+        toast.error(error?.message || 'Failed to get roles');
+        throw error;
+      }
+    },
+    async userRegister(payload) {
+      try {
+        const res = await authService.register(payload)
+
+        if (res?.success) {
+          toast.success(res.message || 'User registered successfully')
+        }
+        return res
+      } catch (error) {
+        toast.error(error?.message || 'Failed to register user')
+        throw error
+      }
+    }
   },
 });

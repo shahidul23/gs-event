@@ -7,15 +7,7 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/pages/Login.vue'),
-    meta: { guestOnly: true },
-  },
-
-  {
-    path: '/register',
-    name: 'Register',
-    component: () => import('@/views/pages/Register.vue'),
-
+    component: () => import('@/views/users/Login.vue'),
     meta: { guestOnly: true },
   },
   {
@@ -291,27 +283,28 @@ const routes = [
         name: 'Widgets',
         component: () => import('@/views/widgets/Widgets.vue'),
       },
-    ],
-  },
-  {
-    path: '/errors',
-    redirect: '/errors/404',
-    name: 'Errors',
-    component: {
-      render() {
-        return h(resolveComponent('router-view'))
-      },
-    },
-    children: [
       {
-        path: '404',
-        name: 'Page404',
-        component: () => import('@/views/pages/Page404'),
-      },
-      {
-        path: '500',
-        name: 'Page500',
-        component: () => import('@/views/pages/Page500'),
+        path: '/user',
+        name: 'Users',
+        component: {
+          render() {
+            return h(resolveComponent('router-view'))
+          },
+        },
+        children: [
+          {
+            path: '/register',
+            name: 'Register',
+            component: () => import('@/views/users/Register.vue'),
+            meta: { requiresAuth: true },
+          },
+          {
+            path: '/list',
+            name: 'List',
+            component: () => import('@/views/users/list.vue'),
+            meta: { requiresAuth: true },
+          },
+        ],
       },
     ],
   },
@@ -319,8 +312,7 @@ const routes = [
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
 
-    component: () =>
-      import('@/views/pages/Page404.vue'),
+    component: () => import('@/views/pages/Page404.vue'),
   },
 ]
 
@@ -332,6 +324,6 @@ const router = createRouter({
     return { top: 0 }
   },
 })
-router.beforeEach(authMiddleware);
+router.beforeEach(authMiddleware)
 
 export default router

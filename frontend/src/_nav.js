@@ -27,10 +27,6 @@ export default [
     name: 'Dashboard',
     to: '/dashboard',
     icon: 'cil-speedometer',
-    badge: {
-      color: 'primary',
-      text: 'NEW',
-    },
   },
   {
     component: 'CNavTitle',
@@ -38,7 +34,7 @@ export default [
   },
   {
     component: 'CNavItem',
-    name: 'Colors',
+    name: 'Colors ai',
     to: '/theme/colors',
     icon: 'cil-drop',
   },
@@ -176,7 +172,7 @@ export default [
           color: 'danger',
           text: 'PRO',
         },
-      }
+      },
     ],
   },
   {
@@ -422,29 +418,19 @@ export default [
   },
   {
     component: 'CNavGroup',
-    name: 'Pages',
-    to: '/pages',
-    icon: 'cil-star',
+    name: 'Users',
+    to: '/user',
+    icon: 'cil-user',
     items: [
       {
         component: 'CNavItem',
-        name: 'Login',
-        to: '/pages/login',
-      },
-      {
-        component: 'CNavItem',
         name: 'Register',
-        to: '/pages/register',
+        to: '/register',
       },
       {
         component: 'CNavItem',
-        name: 'Error 404',
-        to: '/pages/404',
-      },
-      {
-        component: 'CNavItem',
-        name: 'Error 500',
-        to: '/pages/500',
+        name: 'Lists',
+        to: '/list',
       },
     ],
   },

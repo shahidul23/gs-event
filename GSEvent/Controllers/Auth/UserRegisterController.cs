@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using GSEvent.Common;
 using GSEvent.DTOs.Auth;
 using GSEvent.Services.Interfaces;
@@ -16,6 +17,40 @@ namespace GSEvent.Controllers.Auth
         )
         {
             _authService = authService; 
+        }
+        [Authorize]
+        [HttpGet("get-roles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            var currentRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.IsNullOrWhiteSpace(currentRole))
+            {
+                return Unauthorized(
+                    ApiResponse<object>.ErrorResponse("User role not found", 
+                    StatusCodes.Status401Unauthorized,
+                    new[] {"Authenticated user role not found."}
+                    
+                    )
+                );
+            }
+            var roles = await _authService.GetAllRolesAsync(currentRole);
+            if (roles == null || roles.Count == 0)
+            {
+                return NotFound(
+                    ApiResponse<object>.ErrorResponse(
+                        "No roles found",
+                        StatusCodes.Status404NotFound,
+                        new[] { "No roles found" }
+                    )
+                );
+            }
+            return Ok(
+                ApiResponse<List<ReadRoleDto>>.SuccessResponse(
+                    roles,
+                    "Roles retrieved successfully",
+                    StatusCodes.Status200OK
+                )
+            );
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -77,7 +112,6 @@ namespace GSEvent.Controllers.Auth
                 ApiResponse<AuthResponseDto>.SuccessResponse(user, "Login Successfull", StatusCodes.Status200OK)
             );
         }
-        [Authorize]
         [HttpPost("refresh-token")]
         public async Task<IActionResult>RefreshToken([FromBody] TokenResetDto token)
         {
