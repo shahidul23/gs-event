@@ -1,4 +1,5 @@
 using System;
+using GSEvent.Common.Pagination;
 using GSEvent.DTOs.Auth;
 
 namespace GSEvent.Services.Interfaces;
@@ -10,5 +11,6 @@ public interface IAuthService
     Task<AuthResponseDto?> VerifyAndGenerateTokenAsync(TokenResetDto tokenReset);
     Task<bool> LogoutAsync(LogoutDto logout);
     Task<bool> VerifyEmailAsync(EmailVerificationDto emailVerification);
-    Task<List<ReadRoleDto>> GetAllRolesAsync(string currentRole);
+    Task<List<ReadRoleDto>> GetAllRolesAsync();
+    Task<PaginationResponse<UserReadDto>> GetAllUsersAsync(PaginationRequest request);
 }

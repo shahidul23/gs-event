@@ -28,6 +28,7 @@ public static class ApplicationExtensions
             }
             options.UseNpgsql(connectionString);
         });
+        services.AddHttpContextAccessor();
 
         // Repositore 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -42,6 +43,7 @@ public static class ApplicationExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         // Controllers
         services.AddControllers();
         // AutoMapper

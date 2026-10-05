@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using GSEvent.Common.Pagination;
 using GSEvent.DTOs.Auth;
 using GSEvent.Enums;
 using GSEvent.Exceptions;
@@ -16,6 +17,7 @@ namespace GSEvent.Services;
 
 public class AuthService : IAuthService
 {
+    private readonly ICurrentUserService _currentUser;
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IJwtService _jwtService;
@@ -24,6 +26,7 @@ public class AuthService : IAuthService
     private readonly IRoleRepository _roleRepository;
     private readonly IRabbitMqPublisher _rabbitMqPublisher;
     public AuthService(
+        ICurrentUserService currentUser,
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IJwtService jwtService,
@@ -33,6 +36,7 @@ public class AuthService : IAuthService
         IRabbitMqPublisher rabbitMqPublisher
     )
     {
+        _currentUser = currentUser;
         _userRepository = userRepository;
         _jwtService = jwtService;
         _refreshTokenService = refreshTokenService;
@@ -42,23 +46,42 @@ public class AuthService : IAuthService
         _rabbitMqPublisher = rabbitMqPublisher;
     }
 
-    public async Task<List<ReadRoleDto>> GetAllRolesAsync(string currentRole)
+    public async Task<List<ReadRoleDto>> GetAllRolesAsync()
     {
+        var currentRole = _currentUser.Role;
+        if (string.IsNullOrWhiteSpace(currentRole))
+        {
+            return new List<ReadRoleDto>();
+        }
         if (!Enum.TryParse<Role>(currentRole, true, out var userRole))
         {
             return new List<ReadRoleDto>();
         }
         var roles = await _roleRepository.GetAllRolesAsync();
-
-        return roles
-            .Where(role => 
-                Enum.TryParse<Role>(role.Name, true, out var roleEnum) && roleEnum < userRole)
-            .Select(role => new ReadRoleDto
+        var result = new List<ReadRoleDto>();
+        foreach(var role in roles)
+        {
+            if (!Enum.TryParse<Role>(role.Name, true, out var roleEnum))
+            {
+                continue;
+            }
+            if (roleEnum >= userRole)
+            {
+                continue;
+            }
+            result.Add(new ReadRoleDto
             {
                 Id = role.Id,
-                Name = role.Name ?? string.Empty,
-                Value = (int)Enum.Parse<Role>(role.Name!)
-            }).ToList();
+                Name = role.Name,
+                Value = (int)roleEnum
+            });
+        }
+        return result;
+    }
+
+    public async Task<PaginationResponse<UserReadDto>> GetAllUsersAsync(PaginationRequest request)
+    {
+        return await _userRepository.getAllUsers(request);
     }
 
     public async Task<AuthResponseDto?> LoginAsync(LoginDto login)

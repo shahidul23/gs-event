@@ -1,5 +1,7 @@
 using System;
+using GSEvent.Common.Pagination;
 using GSEvent.Data;
+using GSEvent.DTOs;
 using GSEvent.DTOs.Auth;
 using GSEvent.Models;
 using GSEvent.Repositories.Interfaces;
@@ -81,6 +83,76 @@ public class UserRepository : IUserRepository
 
     }
 
+    public async Task<IList<ApplicationUser>> getAllUsers()
+    {
+        return await _userManager.Users.ToListAsync();
+    }
+
+    public async Task<PaginationResponse<UserReadDto>> getAllUsers(PaginationRequest request)
+    {
+        var query = _userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+
+            query = query.Where(x => 
+            x.FullName!.Contains(search) ||
+            x.UserName!.Contains(search) ||
+            x.Email!.Contains(search) ||
+            x.PhoneNumber!.Contains(search)
+            );
+        }
+        query = request.SortBy!.ToLower() switch
+        {
+           "fullname" => request.SortDirection?.ToLower() == "desc"
+                ? query.OrderByDescending(x => x.FullName)
+                : query.OrderBy(x => x.FullName),
+
+            "username" => request.SortDirection?.ToLower() == "desc"
+                ? query.OrderByDescending(x => x.UserName)
+                : query.OrderBy(x => x.UserName),
+
+            "email" => request.SortDirection?.ToLower() == "desc"
+                ? query.OrderByDescending(x => x.Email)
+                : query.OrderBy(x => x.Email),
+
+            "phone" => request.SortDirection?.ToLower() == "desc"
+                ? query.OrderByDescending(x => x.PhoneNumber)
+                : query.OrderBy(x => x.PhoneNumber),
+            _ => query.OrderBy(x => x.FullName)
+        };
+        var totalItems = await query.CountAsync();
+        var users = await query
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync();
+        var result = new List<UserReadDto>();
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            result.Add(new UserReadDto
+            {
+                Id = user.Id,
+                FullName = user.FullName ?? string.Empty,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                Phone = user.PhoneNumber ?? string.Empty,
+                Role = roles.FirstOrDefault() ?? string.Empty 
+            });
+        }
+        var totalPages = (int)Math.Ceiling(totalItems / (double)request.PageSize);
+        return new PaginationResponse<UserReadDto>
+        {
+            Data = result,
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            HasPreviousPage = request.Page > 1,
+            HasNextPage = request.Page < totalPages
+        };
+    }
+
     public async Task<ApplicationUser?> GetByEmailAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email);
@@ -105,6 +177,12 @@ public class UserRepository : IUserRepository
     public async Task<IList<string>> GetRoleAsync(ApplicationUser user)
     {
         return await _userManager.GetRolesAsync(user);
+    }
+
+    public async Task<string> getUserRole(ApplicationUser user)
+    {
+        var roles = await _userManager.GetRolesAsync(user);
+        return roles.FirstOrDefault() ?? string.Empty;
     }
 
     public async Task<string> UserConfirmationAsync(ApplicationUser user)

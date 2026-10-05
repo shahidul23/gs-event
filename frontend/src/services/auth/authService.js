@@ -24,4 +24,7 @@ export const authService = {
   register(paylod) {
     return post('/register', paylod);
   },
+  getAllUsers(params = {}) {
+    return get('/get-users',params )
+  }
 };

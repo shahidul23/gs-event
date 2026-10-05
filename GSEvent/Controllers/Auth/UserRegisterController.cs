@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GSEvent.Common;
+using GSEvent.Common.Pagination;
 using GSEvent.DTOs.Auth;
 using GSEvent.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -22,18 +23,7 @@ namespace GSEvent.Controllers.Auth
         [HttpGet("get-roles")]
         public async Task<IActionResult> GetRoles()
         {
-            var currentRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (string.IsNullOrWhiteSpace(currentRole))
-            {
-                return Unauthorized(
-                    ApiResponse<object>.ErrorResponse("User role not found", 
-                    StatusCodes.Status401Unauthorized,
-                    new[] {"Authenticated user role not found."}
-                    
-                    )
-                );
-            }
-            var roles = await _authService.GetAllRolesAsync(currentRole);
+            var roles = await _authService.GetAllRolesAsync();
             if (roles == null || roles.Count == 0)
             {
                 return NotFound(
@@ -161,5 +151,20 @@ namespace GSEvent.Controllers.Auth
                 )
             );
         }
+
+        [Authorize]
+        [HttpGet("get-users")]
+        public async Task<IActionResult> GetUsers([FromQuery] PaginationRequest request)
+        {
+            var users = await _authService.GetAllUsersAsync(request);
+            return Ok(
+                ApiResponse<PaginationResponse<UserReadDto>>.SuccessResponse(
+                    users,
+                    "Users retrieved successfully",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
+
     }
 }

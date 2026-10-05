@@ -1,4 +1,6 @@
 using System;
+using GSEvent.Common.Pagination;
+using GSEvent.DTOs.Auth;
 using GSEvent.Models;
 
 namespace GSEvent.Repositories.Interfaces;
@@ -19,5 +21,7 @@ public interface IUserRepository
     Task <string> UserConfirmationAsync(ApplicationUser user);
     Task<bool> UserConfirmedAsync(ApplicationUser user, string token);
     Task<string> GenerateUsernameAsync(string email);
+    Task<PaginationResponse<UserReadDto>> getAllUsers(PaginationRequest request);
+    Task<string> getUserRole(ApplicationUser user);
 
 }
