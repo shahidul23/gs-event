@@ -23,5 +23,7 @@ public interface IUserRepository
     Task<string> GenerateUsernameAsync(string email);
     Task<PaginationResponse<UserReadDto>> getAllUsers(PaginationRequest request);
     Task<string> getUserRole(ApplicationUser user);
+    Task<UserReadDto> GetUser(Guid id);
+    Task <ApplicationUser> UpdateUserAsync(ApplicationUser user, string password);
 
 }

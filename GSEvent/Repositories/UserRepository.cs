@@ -3,6 +3,7 @@ using GSEvent.Common.Pagination;
 using GSEvent.Data;
 using GSEvent.DTOs;
 using GSEvent.DTOs.Auth;
+using GSEvent.Exceptions;
 using GSEvent.Models;
 using GSEvent.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -179,10 +180,48 @@ public class UserRepository : IUserRepository
         return await _userManager.GetRolesAsync(user);
     }
 
+    public async Task<UserReadDto> GetUser(Guid id)
+    {
+        var data = await GetByIdAsync(id.ToString());
+        if (data == null)
+        {
+            throw new NotFoundException("User Not Found");
+        }
+        var roles = await _userManager.GetRolesAsync(data);
+        return new UserReadDto
+        {
+            Id = data.Id,
+            FullName = data.FullName ?? string.Empty,
+            UserName = data.UserName ?? string.Empty,
+            Email = data.Email ?? string.Empty,
+            Phone = data.PhoneNumber ?? string.Empty,
+            Role = roles.FirstOrDefault() ?? string.Empty
+        };
+    }
+
     public async Task<string> getUserRole(ApplicationUser user)
     {
         var roles = await _userManager.GetRolesAsync(user);
         return roles.FirstOrDefault() ?? string.Empty;
+    }
+
+    public async Task<ApplicationUser> UpdateUserAsync(ApplicationUser user,string password)
+    {
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            throw new BadRequestException(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var passwordResult = await _userManager.ResetPasswordAsync(user, token, password);
+            if (!passwordResult.Succeeded)
+            {
+                throw new BadRequestException(string.Join(", ", passwordResult.Errors.Select(e => e.Description)));
+            }
+        }
+        return user;
     }
 
     public async Task<string> UserConfirmationAsync(ApplicationUser user)

@@ -84,6 +84,30 @@ public class AuthService : IAuthService
         return await _userRepository.getAllUsers(request);
     }
 
+    public async Task<UserReadDto> GetUserAsync(Guid id)
+    {
+        return await _userRepository.GetUser(id);
+    }
+
+    public async Task<bool> UserUpdateAsync(UserUpdateDto dto)
+    {
+        var user = await _userRepository.GetByIdAsync(dto.Id.ToString());
+        if (user == null)
+        {
+            throw new BadRequestException($"User '{dto.Id}' was not found.");
+        }
+        user.FullName = dto.FullName;
+        user.UserName = dto.UserName;
+        user.Email = dto.Email;
+        user.PhoneNumber = dto.Phone;
+
+        await _userRepository.UpdateUserAsync(
+            user,
+            dto.Password
+        );
+        return true;
+    }
+
     public async Task<AuthResponseDto?> LoginAsync(LoginDto login)
     {
         ApplicationUser? existingUser;
@@ -362,5 +386,4 @@ public class AuthService : IAuthService
         dateTimeVal = dateTimeVal.AddSeconds(utcExpireyDate);
         return dateTimeVal;
     }
-    
 }

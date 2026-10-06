@@ -165,6 +165,35 @@ namespace GSEvent.Controllers.Auth
                 )
             );
         }
-
+        [Authorize]
+        [HttpGet("get-user/{id:guid}")]
+        public async Task<IActionResult> GetUser(Guid id)
+        {
+            var user = await _authService.GetUserAsync(id);
+            return Ok(
+                ApiResponse<UserReadDto>.SuccessResponse(
+                    user,
+                    "Users retrieved successfully",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
+        [Authorize]
+        [HttpPut("user-update/{id:guid}")]
+        public async Task<IActionResult> UserUpdate(
+            Guid id,
+            [FromBody] UserUpdateDto dto
+        )
+        {
+            dto.Id = id;
+            var result = await _authService.UserUpdateAsync(dto);
+            return Ok(
+                ApiResponse<bool>.SuccessResponse(
+                    result,
+                    "User updated successfully",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
     }
 }
