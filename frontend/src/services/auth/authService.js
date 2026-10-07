@@ -1,5 +1,5 @@
 // src/services/authService.js
-import { post, get } from "../api";
+import { post, get, put } from "../api";
 
 
 export const authService = {
@@ -14,10 +14,6 @@ export const authService = {
   passwordChange(password){
     return post('/change-password',password);
   },
-
-  getProfile() {
-    return get('/profile');
-  },
   getAllRoles(){
     return get('/get-roles');
   },
@@ -26,5 +22,11 @@ export const authService = {
   },
   getAllUsers(params = {}) {
     return get('/get-users',params )
-  }
+  },
+  getUser(id) {
+    return get(`/get-user/${id}`)
+  },
+  updateUser(id, payload){
+    return put(`/user-update/${id}`, payload)
+  },
 };

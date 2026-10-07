@@ -1,7 +1,6 @@
 import { h, resolveComponent } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import authMiddleware from '@/middleware/auth'
-
 import DefaultLayout from '@/layouts/DefaultLayout'
 const routes = [
   {
@@ -304,6 +303,12 @@ const routes = [
             component: () => import('@/views/users/list.vue'),
             meta: { requiresAuth: true },
           },
+          {
+            path: '/edit/:id',
+            name: 'User Edit',
+            component: () => import('@/views/users/UserEdit.vue'),
+            meta: {requiresAuth: true},
+          }
         ],
       },
     ],

@@ -16,4 +16,5 @@ public interface IAuthService
     Task<PaginationResponse<UserReadDto>> GetAllUsersAsync(PaginationRequest request);
     Task<UserReadDto> GetUserAsync(Guid id);
     Task<bool> UserUpdateAsync(UserUpdateDto dto);
+    Task<bool> UserDeleteAsync(Guid Id);
 }

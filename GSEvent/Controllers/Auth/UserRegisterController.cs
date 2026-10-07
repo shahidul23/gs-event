@@ -195,5 +195,19 @@ namespace GSEvent.Controllers.Auth
                 )
             );
         }
+
+        [Authorize]
+        [HttpDelete("user-delete/{id:guid}")]
+        public async Task<IActionResult> UserDelete(Guid id)
+        {
+            var result = await _authService.UserDeleteAsync(id);
+            return Ok(
+                ApiResponse<bool>.SuccessResponse(
+                    result,
+                    "User deleted successfully",
+                    StatusCodes.Status200OK
+                )
+            );
+        }
     }
 }

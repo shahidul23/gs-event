@@ -37,8 +37,5 @@ public class UpdateUserValidation : AbstractValidator<UserUpdateDto>
             .WithMessage("Password must be at least 6 characters.")
             .MaximumLength(100)
             .WithMessage("Password cannot exceed 100 characters.");
-        RuleFor(x => x.ConfirmPassword)
-            .Equal(x => x.Password)
-            .WithMessage("Passwords do not match.");
     }
 }

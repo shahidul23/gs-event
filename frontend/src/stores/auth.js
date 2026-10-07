@@ -107,6 +107,23 @@ export const useAuthStore = defineStore('auth', {
         toast.error(error?.message || 'Failed to get users')
         throw error
       }
+    },
+    async getUser(id){
+      try {
+        const response = await authService.getUser(id);
+        return response;
+      } catch (error) {
+        toast.error(error?.message || 'Failed to get user:', error)
+      }
+    },
+    async updateUser(id, payload){
+      try {
+        const response = await authService.updateUser(id, payload)
+        toast.success(response.message || 'Users update successfully')
+        return response.data
+      } catch (error) {
+        toast.error('Failed to update user:', error)
+      }
     }
   },
 });

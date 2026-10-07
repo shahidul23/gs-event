@@ -234,4 +234,20 @@ public class UserRepository : IUserRepository
         var result = await _userManager.ConfirmEmailAsync(user, token);
         return result.Succeeded;
     }
+    public async Task<bool> UserDelete(Guid Id)
+    {
+        var user = await GetByIdAsync(Id.ToString());
+        if (user == null)
+        {
+            throw new BadRequestException($"User '{Id}' was not found.");
+        }
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            throw new BadRequestException(
+                string.Join(", ", result.Errors.Select(e => e.Description))
+            );
+        }
+        return true;
+    }
 }

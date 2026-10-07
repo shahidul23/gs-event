@@ -25,5 +25,6 @@ public interface IUserRepository
     Task<string> getUserRole(ApplicationUser user);
     Task<UserReadDto> GetUser(Guid id);
     Task <ApplicationUser> UpdateUserAsync(ApplicationUser user, string password);
+    Task<bool> UserDelete(Guid Id);
 
 }

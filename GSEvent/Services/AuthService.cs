@@ -97,9 +97,10 @@ public class AuthService : IAuthService
             throw new BadRequestException($"User '{dto.Id}' was not found.");
         }
         user.FullName = dto.FullName;
-        user.UserName = dto.UserName;
         user.Email = dto.Email;
         user.PhoneNumber = dto.Phone;
+        var username = await _userRepository.GenerateUsernameAsync(dto.Email);
+        user.UserName = username;
 
         await _userRepository.UpdateUserAsync(
             user,
@@ -385,5 +386,9 @@ public class AuthService : IAuthService
         var dateTimeVal = new DateTime(1970,1,1,0,0,0,0, DateTimeKind.Utc);
         dateTimeVal = dateTimeVal.AddSeconds(utcExpireyDate);
         return dateTimeVal;
+    }
+    public async Task<bool> UserDeleteAsync(Guid id)
+    {
+        return await _userRepository.UserDelete(id);
     }
 }

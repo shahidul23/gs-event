@@ -43,8 +43,9 @@ import {
 } from '@coreui/icons'
 
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
-
+const router = useRouter();
 const authStore = useAuthStore()
 
 const users = ref([])
@@ -234,9 +235,8 @@ const handleEdit = (user) => {
     'Edit user:',
     user
   )
-
   // Example:
-  // router.push(`/users/${user.id}/edit`)
+  router.push(`/edit/${user.id}`)
 }
 
 const handleDelete = (user) => {
