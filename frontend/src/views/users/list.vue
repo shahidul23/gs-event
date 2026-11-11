@@ -27,25 +27,18 @@
   </CRow>
 </template>
 
-
 <script setup>
-import {
-  ref,
-  onMounted,
-} from 'vue'
-
+import { ref, onMounted } from 'vue'
+import Swal from 'sweetalert2'
 import BaseTable from '@/components/BaseTable.vue'
 
-import {
-  cilZoomIn,
-  cilPencil,
-  cilTrash,
-} from '@coreui/icons'
+import { cilZoomIn, cilPencil, cilTrash } from '@coreui/icons'
 
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import swal from '@/services/swal'
 
-const router = useRouter();
+const router = useRouter()
 const authStore = useAuthStore()
 
 const users = ref([])
@@ -139,7 +132,6 @@ const columns = [
   },
 ]
 
-
 let requestId = 0
 
 const loadUsers = async (params = {}) => {
@@ -160,11 +152,9 @@ const loadUsers = async (params = {}) => {
     if (res?.success) {
       users.value = res.data?.data || []
 
-      totalItems.value =
-        res.data?.totalItems || 0
+      totalItems.value = res.data?.totalItems || 0
 
-      totalPages.value =
-        res.data?.totalPages || 0
+      totalPages.value = res.data?.totalPages || 0
     }
   } catch (error) {
     /*
@@ -174,10 +164,7 @@ const loadUsers = async (params = {}) => {
       return
     }
 
-    console.error(
-      'Failed to load users:',
-      error
-    )
+    console.error('Failed to load users:', error)
   } finally {
     /*
      * Only latest request controls loading
@@ -189,22 +176,13 @@ const loadUsers = async (params = {}) => {
 }
 
 const handleTableChange = (params) => {
-  console.log(
-    'Table params:',
-    params
-  )
+  console.log('Table params:', params)
 
   loadUsers(params)
 }
 
-
-const handleAction = ({
-  action,
-  item,
-}) => {
-
+const handleAction = ({ action, item }) => {
   switch (action) {
-
     case 'view':
       handleView(item)
       break
@@ -220,32 +198,27 @@ const handleAction = ({
 }
 
 const handleView = (user) => {
-  console.log(
-    'View user:',
-    user
-  )
+  console.log('View user:', user)
 
   // Example:
   // router.push(`/users/${user.id}`)
 }
 
+const handleDelete = async (user) => {
+  const confirmed = await swal.confirm({
+    title: 'Delete User?',
+    text: `Are you sure you want to delete ${user.fullName}?`,
+    confirmButtonText: 'Yes, delete it!',
+  })
+  if (!confirmed) return
 
-const handleEdit = (user) => {
-  console.log(
-    'Edit user:',
-    user
-  )
-  // Example:
-  router.push(`/edit/${user.id}`)
-}
-
-const handleDelete = (user) => {
-  console.log(
-    'Delete user:',
-    user
-  )
-
-  // Confirmation modal
+  try {
+    await authStore.deleteUser(user.id)
+    users.value = users.value.filter((item) => item.id !== user.id)
+    swal.success('User deleted successfully!')
+  } catch (error) {
+    swal.error(error)
+  }
 }
 
 onMounted(() => {

@@ -1,5 +1,5 @@
 // src/services/authService.js
-import { post, get, put } from "../api";
+import { post, get, put, remove } from "../api";
 
 
 export const authService = {
@@ -29,4 +29,7 @@ export const authService = {
   updateUser(id, payload){
     return put(`/user-update/${id}`, payload)
   },
+  userDelete(id){
+    return remove(`/user-delete/${id}`)
+  }
 };

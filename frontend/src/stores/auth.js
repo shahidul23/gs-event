@@ -1,8 +1,7 @@
 // src/stores/auth.js
-import { defineStore } from 'pinia';
-import toast from '@/services/toast';
-import { authService } from '@/services/auth/authService';
-
+import { defineStore } from 'pinia'
+import toast from '@/services/toast'
+import { authService } from '@/services/auth/authService'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -19,67 +18,67 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(credentials) {
       try {
-        const res = await authService.login(credentials);
+        const res = await authService.login(credentials)
 
         if (res.success) {
-          this.token = res.data.token;
-          this.user = res.data.user;
+          this.token = res.data.token
+          this.user = res.data.user
 
-          localStorage.setItem('access_token', res.data.token);
-          localStorage.setItem('refresh_token', res.data.refreshToken);
-          localStorage.setItem('user', JSON.stringify(res.data.user));
+          localStorage.setItem('access_token', res.data.token)
+          localStorage.setItem('refresh_token', res.data.refreshToken)
+          localStorage.setItem('user', JSON.stringify(res.data.user))
 
-          toast.success(res.message || 'Login successful');
-          return res;
+          toast.success(res.message || 'Login successful')
+          return res
         }
       } catch (error) {
-        throw error;
+        throw error
       }
     },
 
     async logout() {
       try {
-        const res = await authService.logout();
+        const res = await authService.logout()
         if (res.success) {
-          toast.success(res.message || 'Logout successful');
+          toast.success(res.message || 'Logout successful')
         }
       } catch (error) {
-        console.warn('Backend logout failed or token already revoked:', error);
+        console.warn('Backend logout failed or token already revoked:', error)
       } finally {
-        this.user = null;
-        this.token = null;
+        this.user = null
+        this.token = null
 
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('user')
 
-        window.location.href = '/login';
+        window.location.href = '/login'
       }
     },
     async changePassword(passwordData) {
       try {
-        const res = await authService.passwordChange(passwordData);
+        const res = await authService.passwordChange(passwordData)
         if (res?.success) {
-          toast.success(res.message || 'Password changed successfully');
-          return res;
+          toast.success(res.message || 'Password changed successfully')
+          return res
         }
       } catch (error) {
-        toast.error(error?.message || 'Failed to change password');
-        throw error;
+        toast.error(error?.message || 'Failed to change password')
+        throw error
       }
     },
     async getAllRoles() {
       try {
-        const res = await authService.getAllRoles();
+        const res = await authService.getAllRoles()
         if (res?.success) {
-          this.roles = res.data || [];
+          this.roles = res.data || []
 
-          toast.success(res.message || 'Roles retrieved successfully');
+          toast.success(res.message || 'Roles retrieved successfully')
         }
-        return res;
+        return res
       } catch (error) {
-        toast.error(error?.message || 'Failed to get roles');
-        throw error;
+        toast.error(error?.message || 'Failed to get roles')
+        throw error
       }
     },
     async userRegister(payload) {
@@ -108,15 +107,15 @@ export const useAuthStore = defineStore('auth', {
         throw error
       }
     },
-    async getUser(id){
+    async getUser(id) {
       try {
-        const response = await authService.getUser(id);
-        return response;
+        const response = await authService.getUser(id)
+        return response
       } catch (error) {
         toast.error(error?.message || 'Failed to get user:', error)
       }
     },
-    async updateUser(id, payload){
+    async updateUser(id, payload) {
       try {
         const response = await authService.updateUser(id, payload)
         toast.success(response.message || 'Users update successfully')
@@ -124,6 +123,17 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         toast.error('Failed to update user:', error)
       }
-    }
+    },
+    async deleteUser(id) {
+      try {
+        const response = await authService.userDelete(id)
+        toast.success(response.message || 'User deleted successfully')
+        return response.data
+      } catch (error) {
+        const message = error.response?.data?.message || 'Failed to delete user'
+        toast.error(message)
+        throw error
+      }
+    },
   },
-});
+})
